@@ -1,0 +1,20 @@
+@page "{id:int}"
+@model AssetManagement.Web.Pages.Maintenance.Schedules.EditModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Edit Maintenance Schedule";
+    var heading = new HeadingModel { Crumb = "Maintenance", Title = "Edit Schedule" };
+    heading.Actions.Add(new HeadingAction("Back to List", "/Maintenance/Schedules/Index"));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<form method="post" novalidate>
+    <partial name="_ScheduleForm" model="Model.Form" />
+    <div class="form-actions">
+        <a asp-page="Index" class="btn-modern btn-secondary-modern">Cancel</a>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+    </div>
+</form>

@@ -1,0 +1,174 @@
+@page
+@using System.Text.Json
+@model AssetManagement.Web.Pages.Assets.Edit
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Edit Asset";
+    ViewData["Page-PreTitle"] = "Asset Management";
+    var JsonDate = JsonSerializer.Serialize(Model.Asset.PurchaseDate);
+}
+
+<!-- Page heading -->
+<div class="page-heading">
+    <div class="breadcrumb-row">
+        <span class="crumb muted">Asset Management</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="crumb active">Edit Asset</span>
+    </div>
+    <div class="page-heading-row">
+        <div>
+            <h1 class="page-title">Edit Asset</h1>
+            <p class="page-subtitle">Update asset information below.</p>
+        </div>
+        <div class="page-actions">
+            <a href="javascript:history.back()" class="btn-modern btn-secondary-modern">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-danger-modern"></div>
+
+<form method="post" novalidate>
+    <input type="hidden" asp-for="Asset.Id" />
+
+    <!-- Asset Identity -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-stripe blue"></div>
+            <h4 class="form-card-title">Asset Identity</h4>
+        </div>
+        <div class="form-card-body">
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px;">
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.AssetNumber">Asset Number <span style="color:#DC2626;">*</span></label>
+                    <input asp-for="Asset.AssetNumber" class="form-input-modern" placeholder="e.g. AST-2024-001" required />
+                    <span asp-validation-for="Asset.AssetNumber" class="form-error"></span>
+                </div>
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.AssetName">Asset Name <span style="color:#DC2626;">*</span></label>
+                    <input asp-for="Asset.AssetName" class="form-input-modern" placeholder="e.g. Dell Latitude 7440" required />
+                    <span asp-validation-for="Asset.AssetName" class="form-error"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Details -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-stripe indigo"></div>
+            <h4 class="form-card-title">Asset Details</h4>
+        </div>
+        <div class="form-card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.Department">Department</label>
+                    <input asp-for="Asset.Department" class="form-input-modern" placeholder="e.g. IT Department" />
+                    <span asp-validation-for="Asset.Department" class="form-error"></span>
+                </div>
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.Status">Status</label>
+                    <select asp-for="Asset.Status" class="form-select-modern">
+                        <option value="">-- Select Status --</option>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Retired">Retired</option>
+                    </select>
+                    <span asp-validation-for="Asset.Status" class="form-error"></span>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.Location">Location</label>
+                    <input asp-for="Asset.Location" class="form-input-modern" placeholder="e.g. LOLC Head Office" />
+                    <span asp-validation-for="Asset.Location" class="form-error"></span>
+                </div>
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.CategoryId">Category</label>
+                    <select asp-for="Asset.CategoryId" asp-items="Model.CategoryItems" class="form-select-modern">
+                        <option value="">-- No category --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label-modern">Purchase Date</label>
+                    <div class="input-with-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <input type="text" asp-for="Asset.PurchaseDate" class="form-input-modern"
+                               id="datepicker-edit" placeholder="Select a date" autocomplete="off" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial & Description -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-stripe green"></div>
+            <h4 class="form-card-title">Financial &amp; Description</h4>
+        </div>
+        <div class="form-card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                    <label class="form-label-modern">Purchase Cost</label>
+                    <div class="input-group-modern">
+                        <input asp-for="Asset.PurchaseCost" class="form-input-modern" placeholder="0.00" />
+                        <select asp-for="Asset.Currency" class="form-select-modern">
+                            <option value="USD">USD ($)</option>
+                            <option value="KHR">KHR (៛)</option>
+                        </select>
+                    </div>
+                    <span asp-validation-for="Asset.PurchaseCost" class="form-error"></span>
+                </div>
+                <div>
+                    <label class="form-label-modern" asp-for="Asset.Description">Description</label>
+                    <textarea asp-for="Asset.Description" class="form-textarea-modern" placeholder="Brief description of the asset…"></textarea>
+                    <span asp-validation-for="Asset.Description" class="form-error"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="javascript:history.back()" class="btn-modern btn-secondary-modern">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Cancel
+        </a>
+        <div style="display:flex; gap:8px;">
+            <a asp-page="/Assets/Details" asp-route-slug="@Model.Asset.Slug" class="btn-modern btn-secondary-modern">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Details
+            </a>
+            <button type="submit" class="btn-modern btn-primary-modern">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/tabler/dist/libs/litepicker/dist/litepicker.js" asp-append-version="true"></script>
+    <script>
+    var _jsonDate = @Html.Raw(JsonDate);
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.Litepicker) {
+            new Litepicker({
+                element: document.getElementById('datepicker-edit'),
+                startDate: _jsonDate ? new Date(_jsonDate) : null
+            });
+        }
+    });
+    </script>
+}

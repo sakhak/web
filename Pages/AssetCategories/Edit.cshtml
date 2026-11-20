@@ -1,0 +1,21 @@
+@page "{id:int}"
+@model AssetManagement.Web.Pages.AssetCategories.EditModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Edit Category";
+    ViewData["Profiles"] = Model.Profiles;
+    var heading = new HeadingModel { Crumb = "Asset Categories", Title = "Edit Category" };
+    heading.Actions.Add(new HeadingAction("Back to List", "/AssetCategories/Index"));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<form method="post" novalidate>
+    <partial name="_CategoryForm" model="Model.Form" view-data="ViewData" />
+    <div class="form-actions">
+        <a asp-page="Index" class="btn-modern btn-secondary-modern">Cancel</a>
+        <button type="submit" class="btn-modern btn-primary-modern">Save Changes</button>
+    </div>
+</form>

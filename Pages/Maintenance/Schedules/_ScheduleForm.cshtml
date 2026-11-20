@@ -1,0 +1,48 @@
+@model AssetManagement.Web.Models.MaintenanceScheduleForm
+@{
+    var isEdit = Model.Id > 0;
+}
+<input type="hidden" name="Form.Id" value="@Model.Id" />
+<div class="form-card">
+    <div class="form-card-header">
+        <div class="form-card-stripe blue"></div>
+        <h4 class="form-card-title">Schedule</h4>
+    </div>
+    <div class="form-card-body">
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:16px;">
+            <div>
+                <label class="form-label-modern">Asset number <span style="color:#DC2626;">*</span></label>
+                <input name="Form.AssetNumber" value="@Model.AssetNumber" class="form-input-modern" maxlength="150" @(isEdit ? "readonly" : "") required />
+            </div>
+            <div>
+                <label class="form-label-modern">Work <span style="color:#DC2626;">*</span></label>
+                <input name="Form.Title" value="@Model.Title" class="form-input-modern" maxlength="200" placeholder="e.g. Quarterly service" required />
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr @(isEdit ? "1fr" : ""); gap:16px;">
+            <div>
+                <label class="form-label-modern">Repeat every (months) <span style="color:#DC2626;">*</span></label>
+                <input type="number" min="1" max="120" name="Form.IntervalMonths" value="@Model.IntervalMonths" class="form-input-modern" required />
+            </div>
+            <div>
+                <label class="form-label-modern">@(isEdit ? "Next due date" : "First due date")</label>
+                <input type="date" name="Form.NextDueDate" value="@Model.NextDueDate?.ToString("yyyy-MM-dd")" class="form-input-modern" @(isEdit ? "required" : "") />
+            </div>
+            <div>
+                <label class="form-label-modern">Remind (days before)</label>
+                <input type="number" min="0" max="365" name="Form.LeadDays" value="@Model.LeadDays" class="form-input-modern" />
+            </div>
+            @if (isEdit)
+            {
+                <div>
+                    <label class="form-label-modern">Status</label>
+                    <select name="Form.Active" class="form-select-modern">
+                        <option value="true" selected="@Model.Active">Active</option>
+                        <option value="false" selected="@(!Model.Active)">Inactive</option>
+                    </select>
+                </div>
+            }
+        </div>
+        <p class="form-hint">Without a first due date the cycle starts one interval after the asset's last maintenance, or from today. After work is recorded the next due date becomes the work date plus the interval.</p>
+    </div>
+</div>

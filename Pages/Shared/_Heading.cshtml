@@ -1,0 +1,24 @@
+@model AssetManagement.Web.Models.HeadingModel
+<div class="page-heading">
+    <div class="breadcrumb-row">
+        <span class="crumb muted">@Model.Crumb</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="crumb active">@Model.Title</span>
+    </div>
+    <div class="page-heading-row">
+        <div>
+            <h1 class="page-title">@Model.Title</h1>
+            @if (!string.IsNullOrEmpty(Model.Subtitle))
+            {
+                <p class="page-subtitle">@Model.Subtitle</p>
+            }
+        </div>
+        <div class="page-actions">
+            @foreach (var action in Model.Actions)
+            {
+                <a asp-page="@action.Page" asp-all-route-data="@(action.RouteValues is null ? new Dictionary<string, string?>() : action.RouteValues.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(action.RouteValues)?.ToString()))"
+                   class="btn-modern @(action.Primary ? "btn-primary-modern" : "btn-secondary-modern")">@action.Text</a>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,125 @@
+@page "{id:int}"
+@model AssetManagement.Web.Pages.Onboarding.PurchaseOrders.DetailsModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = Model.Order.PoNumber;
+    var order = Model.Order;
+    var heading = new HeadingModel { Title = order.PoNumber, Subtitle = order.VendorName };
+    heading.Actions.Add(new HeadingAction("Back to List", "/Onboarding/PurchaseOrders/Index"));
+    if (Model.CanCreate && order.Status == "Draft")
+        heading.Actions.Add(new HeadingAction("Edit", "/Onboarding/PurchaseOrders/Edit", new { id = order.Id }));
+    if (Model.CanReceive && (order.Status == "Approved" || order.Status == "PartiallyReceived"))
+        heading.Actions.Add(new HeadingAction("Receive Goods", "/Onboarding/GoodsReceipts/Create", new { poId = order.Id }, true));
+    var ordered = order.Lines.Sum(l => l.Quantity);
+    var received = order.Lines.Sum(l => l.ReceivedQuantity);
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Tabs" />
+<partial name="_Messages" />
+
+<div class="form-card">
+    <div class="form-card-header">
+        <div class="form-card-stripe blue"></div>
+        <h4 class="form-card-title">Order Information</h4>
+    </div>
+    <div class="form-card-body" style="padding:0;">
+        <table class="info-table">
+            <tr><td class="info-label">Status</td><td class="info-value"><span class="status-badge @OnboardingUi.StatusClass(order.Status)"><span class="dot"></span>@OnboardingUi.StatusText(order.Status)</span></td></tr>
+            <tr><td class="info-label">Vendor</td><td class="info-value">@order.VendorName</td></tr>
+            <tr><td class="info-label">Order Date</td><td class="info-value">@order.OrderDate.ToString("dd MMM yyyy")</td></tr>
+            <tr><td class="info-label">Currency</td><td class="info-value">@order.Currency</td></tr>
+            <tr><td class="info-label">Total</td><td class="info-value">@order.Currency @order.TotalAmount.ToString("N2")</td></tr>
+            <tr><td class="info-label">Received</td><td class="info-value">@received of @ordered units</td></tr>
+            @if (!string.IsNullOrEmpty(order.ApprovedBy))
+            {
+                <tr><td class="info-label">Approved</td><td class="info-value">@order.ApprovedBy · @order.ApprovedAt?.ToString("dd MMM yyyy HH:mm")</td></tr>
+            }
+            @if (!string.IsNullOrEmpty(order.Remarks))
+            {
+                <tr><td class="info-label">Remarks</td><td class="info-value">@order.Remarks</td></tr>
+            }
+        </table>
+    </div>
+</div>
+
+<div class="table-card" style="margin-bottom:20px;">
+    <div class="table-toolbar">
+        <div><p class="table-toolbar-title">Order Lines</p></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>#</th><th>Description</th><th>Category</th>
+                    <th class="text-right">Qty</th><th class="text-right">Received</th><th class="text-right">Remaining</th>
+                    <th class="text-right">Unit Cost</th><th class="text-right">Line Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in order.Lines)
+                {
+                    <tr>
+                        <td><span class="cell-num">@line.LineNo</span></td>
+                        <td><div class="cell-name">@line.Description</div></td>
+                        <td><span class="cell-text">@line.CategoryCode</span></td>
+                        <td class="text-right">@line.Quantity</td>
+                        <td class="text-right">@line.ReceivedQuantity</td>
+                        <td class="text-right">@(line.Quantity - line.ReceivedQuantity)</td>
+                        <td class="text-right">@line.UnitCost.ToString("N2")</td>
+                        <td class="text-right">@line.LineTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="table-card" style="margin-bottom:20px;">
+    <div class="table-toolbar">
+        <div><p class="table-toolbar-title">Goods Receipts</p></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead><tr><th>GRN Number</th><th>Received</th><th>By</th><th class="text-right">Units</th><th></th></tr></thead>
+            <tbody>
+                @if (Model.Receipts.Count == 0)
+                {
+                    <tr><td colspan="5"><div class="empty-state"><p>No goods received yet.</p></div></td></tr>
+                }
+                @foreach (var grn in Model.Receipts)
+                {
+                    <tr>
+                        <td><span class="cell-mono">@grn.GrnNumber</span></td>
+                        <td>@grn.ReceivedDate.ToString("dd MMM yyyy")</td>
+                        <td>@grn.ReceivedBy</td>
+                        <td class="text-right">@grn.Lines.Sum(l => l.QuantityReceived)</td>
+                        <td class="text-right"><a asp-page="/Onboarding/GoodsReceipts/Details" asp-route-id="@grn.Id" class="toolbar-btn">Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if ((Model.CanApprove && order.Status == "Draft") || (Model.CanCreate && (order.Status == "Draft" || order.Status == "Approved") && received == 0))
+{
+    <div class="form-actions">
+        <span></span>
+        <div style="display:flex; gap:10px;">
+            @if (Model.CanCreate && (order.Status == "Draft" || order.Status == "Approved") && received == 0)
+            {
+                <form method="post" asp-page-handler="Cancel" asp-route-id="@order.Id" onsubmit="return confirm('Cancel this purchase order?');">
+                    <button type="submit" class="btn-modern btn-secondary-modern" style="color:#DC2626; border-color:#FCA5A5;">Cancel Order</button>
+                </form>
+            }
+            @if (Model.CanApprove && order.Status == "Draft")
+            {
+                <form method="post" asp-page-handler="Approve" asp-route-id="@order.Id">
+                    <button type="submit" class="btn-modern btn-primary-modern">Approve Order</button>
+                </form>
+            }
+        </div>
+    </div>
+}

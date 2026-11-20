@@ -1,0 +1,53 @@
+@page
+@model AssetManagement.Web.Pages.Onboarding.DepreciationProfiles.IndexModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Depreciation Profiles";
+    ViewData["Tab"] = "profile";
+    var heading = new HeadingModel { Title = "Depreciation Profiles", Subtitle = "Useful life and salvage rules assigned to assets when they are tagged." };
+    if (Model.CanManage) heading.Actions.Add(new HeadingAction("New Profile", "/Onboarding/DepreciationProfiles/Create", null, true));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Tabs" />
+<partial name="_Messages" />
+
+<div class="table-card">
+    <div class="table-toolbar">
+        <div>
+            <p class="table-toolbar-title">Profiles</p>
+            <p class="table-toolbar-sub">Assets without a profile use the default 5-year straight-line rule.</p>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead>
+                <tr><th>Code</th><th>Name</th><th>Method</th><th class="text-right">Life</th><th class="text-right">Salvage</th><th>Status</th><th class="text-right">Actions</th></tr>
+            </thead>
+            <tbody>
+                @if (Model.Profiles.Count == 0)
+                {
+                    <tr><td colspan="7"><div class="empty-state"><p>No profiles yet.</p></div></td></tr>
+                }
+                @foreach (var p in Model.Profiles)
+                {
+                    <tr>
+                        <td><span class="cell-mono">@p.Code</span></td>
+                        <td><div class="cell-name">@p.Name</div></td>
+                        <td><span class="cell-text">@p.Method.Replace('_', ' ')</span></td>
+                        <td class="text-right">@p.UsefulLifeMonths months (@((p.UsefulLifeMonths / 12.0).ToString("0.##")) yr)</td>
+                        <td class="text-right">@p.SalvagePercent.ToString("0.##")%</td>
+                        <td><span class="status-badge @OnboardingUi.StatusClass(p.Status)"><span class="dot"></span>@OnboardingUi.StatusText(p.Status)</span></td>
+                        <td class="text-right">
+                            @if (Model.CanManage)
+                            {
+                                <a asp-page="Edit" asp-route-id="@p.Id" class="toolbar-btn">Edit</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

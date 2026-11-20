@@ -1,0 +1,41 @@
+@model AssetManagement.Web.Models.DepreciationProfileForm
+@{
+    var isEdit = Model.Id > 0;
+}
+<input type="hidden" name="Form.Id" value="@Model.Id" />
+<div class="form-card">
+    <div class="form-card-header">
+        <div class="form-card-stripe green"></div>
+        <h4 class="form-card-title">Profile</h4>
+    </div>
+    <div class="form-card-body">
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:16px;">
+            <div>
+                <label class="form-label-modern">Code <span style="color:#DC2626;">*</span></label>
+                <input name="Form.Code" value="@Model.Code" class="form-input-modern" maxlength="50" @(isEdit ? "readonly" : "") placeholder="e.g. IT_EQUIPMENT" required />
+            </div>
+            <div>
+                <label class="form-label-modern">Name <span style="color:#DC2626;">*</span></label>
+                <input name="Form.Name" value="@Model.Name" class="form-input-modern" maxlength="200" required />
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+            <div>
+                <label class="form-label-modern">Useful life (months) <span style="color:#DC2626;">*</span></label>
+                <input type="number" min="1" max="1200" name="Form.UsefulLifeMonths" value="@Model.UsefulLifeMonths" class="form-input-modern" required />
+            </div>
+            <div>
+                <label class="form-label-modern">Salvage value (% of cost)</label>
+                <input type="number" min="0" max="100" step="0.01" name="Form.SalvagePercent" value="@Model.SalvagePercent" class="form-input-modern" />
+            </div>
+            <div>
+                <label class="form-label-modern">Status</label>
+                <select name="Form.Active" class="form-select-modern">
+                    <option value="true" selected="@Model.Active">Active</option>
+                    <option value="false" selected="@(!Model.Active)">Inactive</option>
+                </select>
+            </div>
+        </div>
+        <p class="form-hint">Straight-line depreciation. Changing life or salvage here does not change assets that already have this profile assigned.</p>
+    </div>
+</div>

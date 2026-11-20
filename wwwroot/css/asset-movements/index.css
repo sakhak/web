@@ -1,0 +1,509 @@
+﻿
+/* Asset Movements Page */
+
+/* Main table container */
+.table-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Toolbar */
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table-toolbar-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.table-toolbar-sub {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Scrollable table */
+.table-scroll-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Table styling */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+    .modern-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 13px 14px;
+        white-space: nowrap;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modern-table td {
+        padding: 13px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+/* Asset name */
+.cell-name {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* Asset Movements Table */
+
+.movement-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+/* Fit table within available width */
+.movement-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+    /* Compact columns */
+    .movement-table th,
+    .movement-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+    }
+
+    /* Table headings */
+    .movement-table th {
+        font-size: 11px;
+        font-weight: 600;
+        white-space: normal;
+    }
+
+    /* Comments with ... */
+    .movement-table .comment-truncate {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* Keep status on one line */
+    .movement-table .status-badge {
+        white-space: nowrap;
+    }
+
+    /* Keep action buttons together */
+    .movement-table .icon-action-btn {
+        flex-shrink: 0;
+    }
+
+/* Allow scrolling on smaller screens */
+@media (max-width: 1100px) {
+    .movement-table {
+        min-width: 1100px;
+        table-layout: auto;
+    }
+}
+
+/* Comments: prevent tall rows */
+.comment-truncate {
+    display: block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+    .status-badge .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+.comment-truncate {
+    display: block;
+    width: 180px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
+}
+
+/* Action buttons */
+.icon-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #64748b;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    .icon-action-btn:hover {
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+
+/* Responsive toolbar */
+@media (max-width: 768px) {
+    .table-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .table-toolbar-controls {
+        width: 100%;
+    }
+}
+/* Table container */
+.table-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Table scrolling */
+.movement-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+/* Table width */
+.movement-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse;
+}
+
+    /* Compact columns */
+    .movement-table th,
+    .movement-table td {
+        padding: 10px 6px;
+        font-size: 12px;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+    }
+
+    /* Header */
+    .movement-table th {
+        font-size: 10px;
+        white-space: normal !important;
+    }
+
+    /* Comments with ... */
+    .movement-table .comment-truncate {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* Status */
+    .movement-table .status-badge {
+        font-size: 11px;
+        padding: 4px 6px;
+        white-space: nowrap;
+    }
+/* Reduce space for No., Asset ID and Asset Name */
+
+.movement-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+    /* No. column */
+    .movement-table th:nth-child(2),
+    .movement-table td:nth-child(2) {
+        width: 55px;
+        min-width: 55px;
+        white-space: nowrap;
+    }
+
+    /* Asset ID column */
+    .movement-table th:nth-child(3),
+    .movement-table td:nth-child(3) {
+        width: 75px;
+        min-width: 75px;
+        white-space: nowrap;
+    }
+
+    /* Asset Name column */
+    .movement-table th:nth-child(4),
+    .movement-table td:nth-child(4) {
+        width: 160px;
+        min-width: 140px;
+    }
+
+    /* Reduce horizontal padding */
+    .movement-table th,
+    .movement-table td {
+        padding: 12px 8px;
+    }
+        /* Give Actions column enough space */
+        .movement-table th:last-child,
+        .movement-table td:last-child {
+            width: 145px;
+            min-width: 145px;
+            padding-left: 10px;
+            padding-right: 10px !important;
+            white-space: nowrap;
+        }
+
+            /* Keep action buttons in one row */
+            .movement-table td:last-child > div {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 6px !important;
+            }
+
+    /* Action button size */
+    .movement-table .icon-action-btn {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        padding: 6px;
+        box-sizing: border-box;
+    }
+
+/* Prevent table from cutting off buttons */
+.movement-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+/* =========================================
+   SUMMARY CARDS — SAME SIZE AS ASSETS
+   ========================================= */
+.stat-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+    .stat-cards-grid .stat-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+        min-height: 0;
+        height: auto;
+        padding: 18px 20px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .stat-cards-grid .stat-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0;
+    }
+
+    .stat-cards-grid .stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+.stat-icon.red {
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+.stat-icon.blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.stat-icon.green {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.stat-icon.amber {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.stat-cards-grid .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.stat-card:nth-child(1) .stat-badge {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.stat-card:nth-child(2) .stat-badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.stat-card:nth-child(3) .stat-badge {
+    background: #dcfce7;
+    color: #047857;
+}
+
+.stat-card:nth-child(4) .stat-badge {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.stat-cards-grid .stat-value {
+    margin: 0;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-cards-grid .stat-label {
+    margin: 0;
+    padding-top: 6px;
+    border-top: 1px solid #f1f5f9;
+    color: #64748b;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+/* Normal page scrolling, no inner vertical scrollbar */
+.movement-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+}
+
+.movement-table thead,
+.movement-table thead th {
+    position: static;
+}
+
+/* Keyword input: one border, icon does not overlap text */
+.table-toolbar .toolbar-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 210px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+    .table-toolbar .toolbar-search > svg {
+        position: static !important;
+        display: block;
+        flex: 0 0 14px;
+        width: 14px;
+        height: 14px;
+        margin: 0;
+        transform: none !important;
+        color: #94a3b8;
+    }
+
+    .table-toolbar .toolbar-search > input,
+    .table-toolbar .toolbar-search > .search-input-control {
+        position: static !important;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0 !important;
+        margin: 0;
+        border: 0 !important;
+        outline: 0 !important;
+        box-shadow: none !important;
+        background: transparent;
+        color: #0f172a;
+        font-size: 13px;
+    }
+
+    .table-toolbar .toolbar-search:focus-within {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+    }
+
+@media (max-width: 1100px) {
+    .stat-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .stat-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}

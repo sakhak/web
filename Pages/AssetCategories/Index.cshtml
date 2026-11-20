@@ -1,0 +1,92 @@
+@page
+@model AssetManagement.Web.Pages.AssetCategories.IndexModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Asset Categories";
+    var heading = new HeadingModel { Crumb = "Asset Operations", Title = "Asset Categories", Subtitle = "Classify assets and set the default depreciation profile for new assets of each category." };
+    if (Model.CanManage) heading.Actions.Add(new HeadingAction("New Category", "/AssetCategories/Create", null, true));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<div class="stat-cards-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card"><div class="stat-value">@Model.ActiveCount</div><div class="stat-label">Active categories</div></div>
+    <div class="stat-card"><div class="stat-value">@Model.InactiveCount</div><div class="stat-label">Inactive</div></div>
+    <div class="stat-card"><div class="stat-value">@Model.AssignedAssets.ToString("N0")</div><div class="stat-label">Assets with a category</div></div>
+</div>
+
+<div class="table-card">
+    <div class="table-toolbar">
+        <div>
+            <p class="table-toolbar-title">Categories</p>
+            <p class="table-toolbar-sub">@Model.TotalItems found</p>
+        </div>
+        <div class="table-toolbar-controls">
+            <form method="get" style="display:flex; align-items:center; gap:8px;">
+                <select name="Status" class="toolbar-select" style="width:auto;" onchange="this.form.submit()">
+                    <option value="">All statuses</option>
+                    <option value="Active" selected="@(Model.Status == "Active")">Active</option>
+                    <option value="Inactive" selected="@(Model.Status == "Inactive")">Inactive</option>
+                </select>
+                <div class="toolbar-search">
+                    <input type="text" name="SearchTerm" value="@Model.SearchTerm" placeholder="Code or name…" style="width:200px;" />
+                </div>
+                @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.Status))
+                {
+                    <a asp-page="Index" class="toolbar-btn" style="color:#DC2626; border-color:#FCA5A5;">Clear</a>
+                }
+            </form>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Default profile</th>
+                    <th class="text-right">Assets</th>
+                    <th>Status</th>
+                    @if (Model.CanManage)
+                    {
+                        <th class="text-right">Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Categories.Count == 0)
+                {
+                    <tr><td colspan="7"><div class="empty-state"><p>No categories found.</p></div></td></tr>
+                }
+                @foreach (var c in Model.Categories)
+                {
+                    var active = c.Status == "ACTIVE";
+                    <tr>
+                        <td><span class="cell-mono">@c.Code</span></td>
+                        <td><div class="cell-name">@c.Name</div></td>
+                        <td><span class="cell-text">@c.Description</span></td>
+                        <td><span class="cell-text">@(c.DefaultProfileCode ?? "Default (5 years)")</span></td>
+                        <td class="text-right"><a asp-page="/Assets/Index" asp-route-searchBy="Category" asp-route-searchTerm="@c.Id" class="cell-text">@c.AssetCount</a></td>
+                        <td><span class="status-badge @(active ? "active" : "inactive")"><span class="dot"></span>@(active ? "Active" : "Inactive")</span></td>
+                        @if (Model.CanManage)
+                        {
+                            <td class="text-right">
+                                <a asp-page="Edit" asp-route-id="@c.Id" class="toolbar-btn">Edit</a>
+                                <form method="post" asp-page-handler="Toggle" asp-route-id="@c.Id" style="display:inline;">
+                                    <button type="submit" class="toolbar-btn">@(active ? "Deactivate" : "Activate")</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager" model="@((Model.PageNumber, Model.TotalPages, Model.TotalItems, "categories",
+        (Func<int, string>)(p => Url.Page("Index", new { pageNumber = p, pageSize = Model.PageSize, searchTerm = Model.SearchTerm, status = Model.Status })!)))" />
+</div>

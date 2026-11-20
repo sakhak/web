@@ -1,0 +1,500 @@
+@page
+@model AssetManagement.Web.Pages.AssetMovements.IndexModel
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Asset Movements";
+    ViewData["Page-PreTitle"] = "Overview";
+
+    string MovementStatusClass(string? s) => s?.ToLower() switch
+    {
+        "trust"            => "available",
+        "canceled"         => "disposed",
+        "pending"          => "pending-approval",
+        "pending approval" => "pending-approval",
+        "dispatched"       => "in-transit",
+        "accepted"         => "in-use",
+        "retired"          => "retired",
+        _                  => "inactive"
+    };
+}
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/asset-movements/index.css"
+          asp-append-version="true" />
+}
+
+<!-- Page heading -->
+<div class="page-heading">
+    <div class="breadcrumb-row">
+        <span class="crumb muted">Overview</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="crumb active">Asset Movements</span>
+    </div>
+    <div class="page-heading-row">
+        <div>
+            <h1 class="page-title">Asset Movements</h1>
+            <p class="page-subtitle">Track and manage all asset movement records.</p>
+        </div>
+        <div class="page-actions">
+            @* <a asp-page="/AssetMovements/Disposal/Index" class="nav-item-link @(IsActive("/AssetMovements/Disposal") ? "active" : "")"> *@
+            <a onclick="getSelectedIds1(event)" class="btn-modern btn-primary-modern">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                
+                Create Movement Asset
+            </a>
+            <div class="popup-modal" id="popupText" style="display:none;">
+                <div class="popup-modal-inner">
+                    <p>Please select an item to view its details.</p>
+                <button class=".btn-modern" onclick="closePopup()">Close</button>
+                </div>
+            </div> 
+        </div>
+    </div>
+</div>
+
+<!-- Stat cards -->
+<div class="stat-cards-grid">
+    <div class="stat-card">
+        <div class="stat-card-top">
+            <div class="stat-icon red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 17a7 7 0 1 1 7-7"/><path d="M13 10l2.5-1.5-.5 2.5"/>
+                    <rect x="3.5" y="8" width="5" height="7" rx="1"/>
+                </svg>
+            </div>
+            <span class="stat-badge">Total</span>
+        </div>
+        <div class="stat-value">@Model.TotalItems.ToString("N0")</div>
+        <div class="stat-label">Total Asset Movements</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-top">
+            <div class="stat-icon blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/>
+                    <path d="M10 8h4l-2-2M14 16h-4l2 2"/>
+                    <path d="M10 9c-3 0-5 2-5 5M14 15c3 0 5-2 5-5"/>
+                </svg>
+            </div>
+            <span class="stat-badge">Transfers</span>
+        </div>
+        <div class="stat-value">@Model.TotalTransfer.ToString("N0")</div>
+        <div class="stat-label">Total Transfers</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-top">
+            <div class="stat-icon green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 8a4 4 0 0 1 5-3l-2 2 3 3 2-2a4 4 0 0 1-3 5l-5 5a2 2 0 0 1-3-3z"/>
+                    <circle cx="17" cy="7" r="2"/>
+                </svg>
+            </div>
+            <span class="stat-badge">Repairs</span>
+        </div>
+        <div class="stat-value">@Model.TotalRepair.ToString("N0")</div>
+        <div class="stat-label">Total Repairs</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-top">
+            <div class="stat-icon amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7h16M10 11v6M14 11v6"/>
+                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/>
+                    <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </div>
+            <span class="stat-badge">Disposals</span>
+        </div>
+        <div class="stat-value">@Model.TotalDisposal.ToString("N0")</div>
+        <div class="stat-label">Total Disposals</div>
+    </div>
+</div>
+
+<!-- Table card -->
+<div class="table-card">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="table-toolbar-title">Asset Movement Items</h3>
+            <p class="table-toolbar-sub">All recorded movements across the organisation</p>
+        </div>
+        <div class="table-toolbar-controls">
+            <!-- Page size -->
+            <form method="get" id="pageSizeForm" style="display:flex;align-items:center;gap:6px;">
+                <input type="hidden" name="pageNumber" value="@Model.PageNumber" />
+                <span class="toolbar-label">Show</span>
+                <select asp-for="PageSize"
+                        asp-items="Model.PageSizeOptions"
+                        class="toolbar-select"
+                        onchange="document.getElementById('pageSizeForm').submit();">
+                </select>
+                <span class="toolbar-label">entries</span>
+            </form>
+
+            <!-- Truct filter -->
+            <a asp-page="/AssetMovements/Index" asp-route-Filter="Truct"
+               class="status-badge in-transit" style="text-decoration:none;cursor:pointer;">
+                Truct
+            </a>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Search form -->
+            <form method="get" id="searchForm" style="display:flex;align-items:center;gap:6px;">
+                <input type="hidden" name="pageNumber" value="@Model.PageNumber" />
+                <input type="hidden" name="pageSize"   value="@Model.PageSize" />
+
+                <select name="searchBy" id="searchBy" class="toolbar-select" required>
+                    <option value="" disabled selected>Search by</option>
+                    <option value="AssetId"             selected="@(Model.SearchBy == "AssetId")">Asset ID</option>
+                    <option value="MovementType"        selected="@(Model.SearchBy == "MovementType")">Movement Type</option>
+                    <option value="SourceLocation"      selected="@(Model.SearchBy == "SourceLocation")">Source Location</option>
+                    <option value="CurrentCustodian"    selected="@(Model.SearchBy == "CurrentCustodian")">Current Custodian</option>
+                    <option value="DestinationLocation" selected="@(Model.SearchBy == "DestinationLocation")">Destination Location</option>
+                    <option value="NewCustodian"        selected="@(Model.SearchBy == "NewCustodian")">New Custodian</option>
+                    <option value="Status"              selected="@(Model.SearchBy == "Status")">Status</option>
+                </select>
+
+                <div class="toolbar-search">
+                    <svg width="14" height="14"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         aria-hidden="true">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+
+                    <input id="searchTermInput"
+                           type="text"
+                           class="search-input-control"
+                           placeholder="Enter keyword"
+                           value="@Model.SearchTerm"
+                           onkeydown="handleSearchSubmit(event)" />
+                </div>
+
+                <select id="statusDropdown" class="toolbar-select" style="display:none;">
+                    <option value="">-- Select Status --</option>
+                    <option value="Available"   selected="@(Model.SearchTerm == "Available")">Available</option>
+                    <option value="In Use"      selected="@(Model.SearchTerm == "In Use")">In Use</option>
+                    <option value="Maintenance" selected="@(Model.SearchTerm == "Maintenance")">Maintenance</option>
+                    <option value="Retired"     selected="@(Model.SearchTerm == "Retired")">Retired</option>
+                </select>
+
+                <input type="hidden" name="searchTerm" id="searchTermHidden" />
+
+                <button type="submit" id="searchButton" class="toolbar-btn" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                </button>
+
+                @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                {
+                    <a asp-page="/AssetMovements/Index" class="toolbar-btn">Clear</a>
+                }
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="movement-table-wrapper">
+        <table class="modern-table movement-table">
+            <thead>
+                <tr>
+                    <th style="width:36px;">
+                        <input id="selectAllMovements" class="check-modern" type="checkbox" aria-label="Select all" />
+                    </th>
+                    <th>No.</th>
+                    <th>Asset ID</th>
+                    <th>Asset Name</th>
+                    <th>Movement Type</th>
+                    <th>Source Location</th>
+                    <th>Current Custodian</th>
+                    <th>Destination Location</th>
+                    <th>New Custodian</th>
+                    <th>Status</th>
+                    <th style="width: 130px;">Comments</th>
+                    @if (Model.IsHavePermAccess)
+                    {
+                        <th>Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AssetMovements != null && Model.AssetMovements.Any())
+                {
+                    var i = 1;
+                    foreach (var item in Model.AssetMovements)
+                    {
+                        var statusCls = MovementStatusClass(item.Status);
+                        <tr>
+                            <td>
+                                <input class="check-modern asset-checkbox" type="checkbox"
+                                       aria-label="Select movement" value="@item.Id" 
+                                       data-slug="@(item.Asset?.Slug ?? "")"/>
+                            </td>
+                            
+                            @* <td class="cell-text" style="display:none;">@item.Asset?.Slug</td> *@
+                            <td class="cell-text">@item.Id</td>
+                            <td class="cell-mono">@item.AssetId</td>
+                            <td class="cell-name">@(item.Asset != null ? item.Asset.AssetName : "")</td>
+                            <td class="cell-text">@item.MovementType</td>
+                            <td class="cell-text">@item.SourceLocation</td>
+                            <td class="cell-text">@item.CurrentCustodian</td>
+                            <td class="cell-text">@item.DestinationLocation</td>
+                            <td class="cell-text">@item.NewCustodian</td>
+                            <td>
+                                <span class="status-badge @statusCls">
+                                    <span class="dot"></span>@item.Status
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cell-text comment-truncate"
+                                      title="@item.Comments">
+                                    @(string.IsNullOrWhiteSpace(item.Comments) ? "—" : item.Comments)
+                                </span>
+                            </td>
+                             @* <td class="cell-text">
+                                 <span class="comment-truncate" title="@item.Comments">@item.Comments</span>
+                             </td> *@
+                            @if (Model.IsHavePermAccess)
+                            {
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:4px;">
+                                        <!-- View -->
+                                        <a asp-page="/AssetMovements/Details" asp-route-id="@item.Id"
+                                           class="icon-action-btn" title="View Details">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </a>
+                                        <!-- Edit -->
+                                        <a href="#" class="icon-action-btn" title="Edit">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                        </a>
+                                        <!-- More (Send To Approve) -->
+                                        <div class="action-dropdown">
+                                            <button class="icon-action-btn" data-action-toggle="mv-menu-@item.Id" title="More Actions">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>
+                                                </svg>
+                                            </button>
+                                            <div class="action-dropdown-menu" id="mv-menu-@item.Id">
+                                                <a class="action-dropdown-item" id="btnSendToApprove">Send To Approve</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                        i++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="12" style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">
+                            No movements found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer / pagination -->
+    @{
+        var start = (Model.PageNumber - 1) * Model.PageSize + 1;
+        var end   = start + (Model.AssetMovements?.Count ?? 0) - 1;
+    }
+    <div class="table-footer">
+        <span class="table-footer-info">
+            Showing <strong>@start</strong> to <strong>@end</strong> of <strong>@Model.TotalItems</strong> entries
+        </span>
+        <div class="pagination-modern">
+            <a class="page-btn @(Model.PageNumber == 1 ? "disabled" : "")"
+               asp-page="/AssetMovements/Index"
+               asp-route-pageNumber="@(Model.PageNumber - 1)"
+               asp-route-pageSize="@Model.PageSize">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                prev
+            </a>
+
+            @for (var pi = 1; pi <= Model.TotalPages; pi++)
+            {
+                <a class="page-btn @(pi == Model.PageNumber ? "active" : "")"
+                   asp-page="/AssetMovements/Index"
+                   asp-route-pageNumber="@pi"
+                   asp-route-pageSize="@Model.PageSize">@pi</a>
+            }
+
+            <a class="page-btn @(Model.PageNumber == Model.TotalPages ? "disabled" : "")"
+               asp-page="/AssetMovements/Index"
+               asp-route-pageNumber="@(Model.PageNumber + 1)"
+               asp-route-pageSize="@Model.PageSize">
+                next
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Send-to-approve modal (custom overlay — Bootstrap modal CSS removed from layout) -->
+<div id="formModal"
+     style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9000;align-items:center;justify-content:center;"
+     onclick="if(event.target===this)closeFormModal()">
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.2);">
+        <div style="padding:20px 24px;border-bottom:1px solid #E8ECF0;display:flex;align-items:center;justify-content:space-between;">
+            <h5 id="modalTitle" style="margin:0;font-size:16px;font-weight:600;color:#0F172A;">Modal</h5>
+            <button onclick="closeFormModal()"
+                    style="background:none;border:none;cursor:pointer;color:#64748B;padding:4px;font-size:20px;line-height:1;"
+                    aria-label="Close">&times;</button>
+        </div>
+        <div id="modalBody" style="padding:24px;"></div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    // ─── Modal helpers ───
+    function openFormModal()  { document.getElementById('formModal').style.display = 'flex'; }
+    function closeFormModal() { document.getElementById('formModal').style.display = 'none'; }
+
+    // ─── Send to Approve ───
+    const getSelectedIds = () =>
+        Array.from(document.querySelectorAll('.asset-checkbox:checked')).map(cb => cb.value);
+
+    $(document).on('click', '#btnSendToApprove', function () {
+        const ids = getSelectedIds();
+        if (!Array.isArray(ids) || ids.length === 0) { alert('Please select exactly one item.'); return; }
+        if (ids.length > 1) { alert('Please select only one item.'); return; }
+
+        $.ajaxSettings.traditional = true;
+        $('#modalTitle').text('Asset Movement Send To Approve');
+        $('#modalBody').html('<div style="text-align:center;padding:32px;">Loading...</div>');
+
+        $.get('@Url.Page("Index", "SendToApproveFormPartial")', { ids: ids }, function (html) {
+            $('#modalBody').html(html);
+            const id = parseInt(ids[0], 10);
+            $('#modalBody').find('#Id').val(id);
+            wireSendToApproveSubmit();
+            openFormModal();
+        });
+    });
+
+    function wireSendToApproveSubmit() {
+        const form = $('#modalBody').find('form#sendToApproveForm');
+        form.off('submit').on('submit', function (e) {
+            e.preventDefault();
+            const antiForgeryToken = form.find('input[name="__RequestVerificationToken"]').val();
+            const approveUrl = form.attr('action');
+            const formData = form.serialize();
+            console.log('approveUrl:', approveUrl);
+            console.log('formData:', formData);
+            $.ajax({
+                url: approveUrl, method: 'POST', data: formData,
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                success: function (result) {
+                    if (result && result.success) { alert(result.message); closeFormModal(); location.reload(); }
+                    else { alert((result && result.message) || 'Validation failed.'); }
+                },
+                error: function (xhr) {
+                    console.error('Approve error:', xhr);
+                    let msg = 'Error saving data.';
+                    if (xhr && xhr.responseJSON) {
+                        console.log('Server message:', xhr.responseJSON.message);
+                        console.table(xhr.responseJSON.errors || {});
+                        msg = xhr.responseJSON.message || msg;
+                    }
+                    alert(msg);
+                }
+            });
+        });
+    }
+
+    // ─── Select-all checkboxes ───
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAll  = document.getElementById('selectAllMovements');
+        const checkboxes = document.querySelectorAll('.asset-checkbox');
+
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+                selectAll.checked = this.checked
+                    ? Array.from(checkboxes).every(c => c.checked)
+                    : false;
+            });
+        });
+    });
+
+    function closePopup() {
+        if(document.getElementById('popupText').style.display === 'none') {
+            document.getElementById('popupText').style.display = 'block';
+        } else {
+            document.getElementById('popupText').style.display = 'none';
+        }
+    }
+
+    function getSelectedIds1(event) {
+    event.preventDefault();
+    const checked = document.querySelectorAll('.asset-checkbox:checked');
+
+    if (checked.length === 0) {
+        closePopup();
+        return;
+    }
+
+    const slug = checked[0].dataset.slug;
+    window.location.href = `/AssetMovements/Create?slug=${encodeURIComponent(slug)}`;
+}
+
+    // ─── Search form ───
+    const searchBy    = document.getElementById('searchBy');
+    const input       = document.getElementById('searchTermInput');
+    const dropdown    = document.getElementById('statusDropdown');
+    const hiddenInput = document.getElementById('searchTermHidden');
+
+    function updateSearchTermInput() {
+        if (searchBy.value === 'Status') {
+            input.style.display    = 'none';
+            dropdown.style.display = '';
+            hiddenInput.value = dropdown.value;
+        } else {
+            input.style.display    = '';
+            dropdown.style.display = 'none';
+            hiddenInput.value = input.value;
+        }
+    }
+
+    searchBy.addEventListener('change', updateSearchTermInput);
+    input.addEventListener('input', () => hiddenInput.value = input.value);
+    dropdown.addEventListener('change', () => {
+        hiddenInput.value = dropdown.value;
+        document.getElementById('searchForm').submit();
+    });
+    window.addEventListener('DOMContentLoaded', updateSearchTermInput);
+
+    function handleSearchSubmit(e) {
+        if (e.key === 'Enter') {
+            hiddenInput.value = input.value;
+            document.getElementById('searchForm').submit();
+        }
+    }
+    </script>
+}

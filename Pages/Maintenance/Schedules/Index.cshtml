@@ -1,0 +1,86 @@
+@page
+@model AssetManagement.Web.Pages.Maintenance.Schedules.IndexModel
+@using AssetManagement.Domain.Constants
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Maintenance Schedules";
+    ViewData["Tab"] = "schedules";
+    var heading = new HeadingModel { Crumb = "Asset Operations", Title = "Maintenance Schedules", Subtitle = "Recurring maintenance per asset. Completing work moves the next due date forward." };
+    if (Model.CanManage) heading.Actions.Add(new HeadingAction("New Schedule", "/Maintenance/Schedules/Create", null, true));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Tabs" />
+<partial name="_Messages" />
+
+<div class="table-card">
+    <div class="table-toolbar">
+        <div>
+            <p class="table-toolbar-title">Schedules</p>
+            <p class="table-toolbar-sub">@Model.Schedules.Count found</p>
+        </div>
+        <form method="get" class="table-toolbar-controls" style="display:flex; align-items:center; gap:8px;">
+            <select name="Status" class="toolbar-select" style="width:auto;" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="Active" selected="@(Model.Status == "Active")">Active</option>
+                <option value="Inactive" selected="@(Model.Status == "Inactive")">Inactive</option>
+            </select>
+            <div class="toolbar-search">
+                <input type="text" name="SearchTerm" value="@Model.SearchTerm" placeholder="Asset or work…" style="width:200px;" />
+            </div>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.Status))
+            {
+                <a asp-page="Index" class="toolbar-btn" style="color:#DC2626; border-color:#FCA5A5;">Clear</a>
+            }
+        </form>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Work</th>
+                    <th>Every</th>
+                    <th>Next due</th>
+                    <th>Reminder</th>
+                    <th>State</th>
+                    <th>Status</th>
+                    @if (Model.CanManage)
+                    {
+                        <th class="text-right">Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Schedules.Count == 0)
+                {
+                    <tr><td colspan="8"><div class="empty-state"><p>No schedules yet.</p></div></td></tr>
+                }
+                @foreach (var s in Model.Schedules)
+                {
+                    var active = s.Status == AssetManagement.Domain.Constants.StatusCode.Active;
+                    <tr>
+                        <td><div class="cell-name">@s.AssetName</div><span class="cell-mono">@s.AssetNumber</span></td>
+                        <td><span class="cell-text">@s.Title</span></td>
+                        <td><span class="cell-text">@s.IntervalMonths months</span></td>
+                        <td><span class="cell-text">@s.NextDueDate.ToString("dd MMM yyyy")</span></td>
+                        <td><span class="cell-text">@s.LeadDays days before</span></td>
+                        <td>
+                            @if (active)
+                            {
+                                <span class="status-badge @MaintenanceUi.StateClass(s.DueState)"><span class="dot"></span>@MaintenanceUi.StateText(s.DueState)</span>
+                            }
+                        </td>
+                        <td><span class="status-badge @(active ? "active" : "inactive")"><span class="dot"></span>@(active ? "Active" : "Inactive")</span></td>
+                        @if (Model.CanManage)
+                        {
+                            <td class="text-right"><a asp-page="Edit" asp-route-id="@s.Id" class="toolbar-btn">Edit</a></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

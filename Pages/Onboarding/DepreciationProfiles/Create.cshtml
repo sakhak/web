@@ -1,0 +1,20 @@
+@page
+@model AssetManagement.Web.Pages.Onboarding.DepreciationProfiles.CreateModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "New Depreciation Profile";
+    var heading = new HeadingModel { Title = "New Depreciation Profile" };
+    heading.Actions.Add(new HeadingAction("Back to List", "/Onboarding/DepreciationProfiles/Index"));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<form method="post" novalidate>
+    <partial name="_ProfileForm" model="Model.Form" />
+    <div class="form-actions">
+        <a asp-page="Index" class="btn-modern btn-secondary-modern">Cancel</a>
+        <button type="submit" class="btn-modern btn-primary-modern">Create Profile</button>
+    </div>
+</form>

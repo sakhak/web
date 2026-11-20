@@ -1,0 +1,9 @@
+@{
+    var active = ViewData["Tab"]?.ToString();
+    string Css(string tab) => tab == active ? "tab-link active" : "tab-link";
+}
+<div class="tab-bar">
+    <a asp-page="/Maintenance/Index" class="@Css("due")">Due</a>
+    <a asp-page="/Maintenance/Records/Index" class="@Css("records")">Work orders</a>
+    <a asp-page="/Maintenance/Schedules/Index" class="@Css("schedules")">Schedules</a>
+</div>

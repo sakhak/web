@@ -1,0 +1,122 @@
+@page "{grnId:int}/{lineId:int}"
+@model AssetManagement.Web.Pages.Onboarding.GoodsReceipts.TagModel
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Tag Assets";
+    var heading = new HeadingModel { Title = "Tag Assets", Subtitle = $"{Model.Receipt.GrnNumber} · {Model.Line.Description}" };
+    heading.Actions.Add(new HeadingAction("Back to Receipt", "/Onboarding/GoodsReceipts/Details", new { id = Model.Receipt.Id }));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<form method="post" novalidate>
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-stripe green"></div>
+            <h4 class="form-card-title">Depreciation</h4>
+        </div>
+        <div class="form-card-body">
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
+                <div>
+                    <label class="form-label-modern">Depreciation Profile</label>
+                    <select name="Form.DepreciationProfileId" class="form-select-modern">
+                        <option value="">Default (5 years)</option>
+                        @foreach (var p in Model.Profiles)
+                        {
+                            <option value="@p.Id" selected="@(Model.Form.DepreciationProfileId == p.Id)">@p.Name · @p.UsefulLifeMonths months · salvage @p.SalvagePercent.ToString("0.##")%</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label-modern">Depreciation Start</label>
+                    <input type="date" name="Form.StartDate" value="@(Model.Form.StartDate?.ToString("yyyy-MM-dd"))" class="form-input-modern" />
+                </div>
+            </div>
+            <p class="form-hint">Each asset copies the profile's life and salvage now, so later profile edits do not change it.</p>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-stripe blue"></div>
+            <h4 class="form-card-title">Assets (@Model.Line.RemainingToTag left to tag, cost @Model.Receipt.Currency @Model.Line.UnitCost.ToString("N2") each)</h4>
+        </div>
+        <div class="form-card-body">
+            <table class="modern-table line-table" id="lines-table" data-prefix="Form.Assets" data-max="@Model.Line.RemainingToTag">
+                <thead>
+                    <tr>
+                        <th style="width:20%;">Asset Number <span style="color:#DC2626;">*</span></th>
+                        <th style="width:24%;">Asset Name</th>
+                        <th style="width:20%;">Department <span style="color:#DC2626;">*</span></th>
+                        <th style="width:20%;">Location <span style="color:#DC2626;">*</span></th>
+                        <th style="width:14%;">Status</th>
+                        <th style="width:2%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Form.Assets.Count; i++)
+                    {
+                        var a = Model.Form.Assets[i];
+                        <tr data-row>
+                            <td><input name="Form.Assets[@i].AssetNumber" value="@a.AssetNumber" class="form-input-modern" maxlength="150" placeholder="e.g. ASSET-001" /></td>
+                            <td><input name="Form.Assets[@i].AssetName" value="@a.AssetName" class="form-input-modern" maxlength="150" placeholder="@Model.Line.Description" /></td>
+                            <td>
+                                <select name="Form.Assets[@i].Department" class="form-select-modern">
+                                    <option value="">-- Select --</option>
+                                    @foreach (var d in Model.Departments)
+                                    {
+                                        <option value="@d.NameEn" selected="@(a.Department == d.NameEn)">@d.NameEn</option>
+                                    }
+                                </select>
+                            </td>
+                            <td><input name="Form.Assets[@i].Location" value="@a.Location" class="form-input-modern" maxlength="150" /></td>
+                            <td>
+                                <select name="Form.Assets[@i].Status" class="form-select-modern">
+                                    <option value="Available" selected="@(a.Status is null or "Available")">Available</option>
+                                    <option value="In Use" selected="@(a.Status == "In Use")">In Use</option>
+                                </select>
+                            </td>
+                            <td><button type="button" class="row-remove" data-remove title="Remove">&times;</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button type="button" class="toolbar-btn" id="add-line" style="margin-top:12px;">+ Add asset</button>
+
+            <template id="line-template">
+                <tr data-row>
+                    <td><input name="Form.Assets[__INDEX__].AssetNumber" class="form-input-modern" maxlength="150" placeholder="e.g. ASSET-001" /></td>
+                    <td><input name="Form.Assets[__INDEX__].AssetName" class="form-input-modern" maxlength="150" placeholder="@Model.Line.Description" /></td>
+                    <td>
+                        <select name="Form.Assets[__INDEX__].Department" class="form-select-modern">
+                            <option value="">-- Select --</option>
+                            @foreach (var d in Model.Departments)
+                            {
+                                <option value="@d.NameEn">@d.NameEn</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input name="Form.Assets[__INDEX__].Location" class="form-input-modern" maxlength="150" /></td>
+                    <td>
+                        <select name="Form.Assets[__INDEX__].Status" class="form-select-modern">
+                            <option value="Available" selected>Available</option>
+                            <option value="In Use">In Use</option>
+                        </select>
+                    </td>
+                    <td><button type="button" class="row-remove" data-remove title="Remove">&times;</button></td>
+                </tr>
+            </template>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a asp-page="Details" asp-route-id="@Model.Receipt.Id" class="btn-modern btn-secondary-modern">Cancel</a>
+        <button type="submit" class="btn-modern btn-primary-modern">Create Assets</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/onboarding.js" asp-append-version="true"></script>
+}

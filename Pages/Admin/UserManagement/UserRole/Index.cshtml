@@ -1,0 +1,472 @@
+﻿@page
+@using System.Text.Json
+@using AssetManagement.Domain.Entities
+@model Index
+@{
+    Layout = "_Layout";
+    var roleJson = JsonSerializer.Serialize(Model.Roles);
+    var userJson = JsonSerializer.Serialize(Model.Users);
+    var userRoleJson = JsonSerializer.Serialize(Model.UserRoles);
+}
+
+<div id="loadingMask">
+    <div class="spinner-border text-white">
+    </div>
+</div>
+
+<div class="modal fade" 
+     id="errorModal" 
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content rounded-0">
+            <div class="modal-header text-white">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorModalMessage">An error occurred. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div>
+        <div class="page-header">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="text-header">
+                        User And Role Mapping
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-6 d-flex justify-content-start">
+                <button class="normal-button"
+                        href="#change_userRole"
+                        data-bs-toggle="modal"
+                        data-target="#change_userRole">
+                    <i class="fa fa-plus"></i>
+                    Create New
+                </button>
+            </div>
+            <div class="col-sm-6 col-6">
+                <div class="d-flex text-nowrap align-items-center gap-3 col-12">
+                    <button id="removeSelected"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmModal"
+                            class="normal-button bg-danger text-white"
+                            style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="16"
+                             height="16"
+                             fill="currentColor"
+                             class="bi bi-trash"
+                             viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                        </svg>
+                        remove
+                    </button>
+                    <button id="cancelSelected"
+                            class="normal-button"
+                            style="display: none;">
+                        cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                <div class="d-flex text-nowrap align-items-center col-12">
+                </div>
+            </div>
+            <div class="col-sm-2">
+            </div>
+            <div class="col-sm-7 d-flex justify-content-end gap-3">
+                <button id="removeSelected" 
+                        class="btn btn-danger btn-sm"
+                        style="display: none;">
+                    remove
+                    </button>
+                <button id="cancelSelected" 
+                        class="btn btn-secondary btn-sm" 
+                        style="display: none;">
+                     cancel
+                 </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="myGrid" 
+                     class="ag-theme-quartz" 
+                     style="height: calc(100vh - 150px)">
+                    @Html.AntiForgeryToken()
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal custom-modal fade" 
+     id="change_userRole" 
+     aria-hidden="true" 
+     aria-labelledby="change_userRole" 
+     tabindex="-1" 
+     role="dialog">
+    <div class="modal-dialog modal-dialog-centered" 
+         role="document">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h5 class="modal-title">Update User Role</h5>
+                <button type="button" 
+                        class="btn-close" 
+                        data-bs-dismiss="modal" 
+                        aria-labelledby="Close" 
+                        tabindex="-1">
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="submitUpdate">
+                    <div class="col-sm-12">
+                        @* <div class="form-group">
+                            <input type="hidden" 
+                                   id="userId" 
+                                   value="" />
+                            <label>Username <span class="text-danger"></span></label>
+                            <input disabled class="form-control" 
+                                            type="text" 
+                                            id="username" required>
+                        </div> *@
+
+                        <div class="form-group">
+                            <input type="hidden" id="userId" value="" />
+                            <label>Username <span class="text-danger">*</span></label>
+                            <input class="form-control"
+                                   type="text"
+                                   id="username"
+                                   name="username"
+                                   placeholder="Enter username"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-form-label">Role</label>
+                            <select id="roleSelect" 
+                                    class="select custom-select">
+                                    @if (Model.Roles != null)
+                                    {
+                                        @foreach (Role role in Model.Roles)
+                                        {
+                                            <option value="@role.Id">@role.Name</option>
+                                        }
+                                    }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="submit-section">
+                        <button type="submit" 
+                                class="btn lolc-bg submit-btn">
+                                Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts
+{
+    <script>
+        function showMessageModal(errorMessage, bgColor = "bg-danger") {
+            if (bgColor === "bg-success") {
+                modalTitle = "";
+            } else if (bgColor === "bg-warning") {
+                modalTitle = "Warning";
+            } else if (bgColor === "bg-info") {
+                modalTitle = "Information";
+            }else if (bgColor === "bg-danger"){
+                modalTitle = "Error";
+            }
+
+            $('#errorModal .modal-header')
+                .removeClass("bg-danger bg-warning bg-info bg-success bg-primary bg-secondary")
+                .addClass(`${bgColor} text-white`);
+            $('#errorModal .modal-title').text(modalTitle);
+            $('#errorModalMessage').text(errorMessage);
+            $('#errorModal').modal('show');
+        }
+
+        function actionRenderer(params) {
+            let userId = params.data.UserId;
+            let roleId = params.data.RoleId;
+
+            let user = userData.find(u => u.Id === userId);
+
+            return `
+                  <span class="normal-button-icons"
+                        data-bs-toggle="modal"
+                        data-bs-target="#change_userRole"
+                        data-tooltip="Change user role"
+                        data-user-name="${user ? user.Mail : 'Unknown'}"
+                        data-role-id="${roleId}"
+                        data-user-id="${userId}"
+                        onclick="showUserRole(this)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#899bbd" class="bi bi-person-fill-gear" viewBox="0 0 16 16">
+                        <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4m9.886-3.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
+                      </svg>
+                  </span>
+                `;
+        }
+
+        function showUserRole(element) {
+            const userName = element.getAttribute('data-user-name');
+            const userId = element.getAttribute('data-user-id');
+            const roleId = element.getAttribute('data-role-id');
+
+            document.getElementById('username').value = userName;
+            document.getElementById('userId').value = userId;
+
+            const roleSelect = document.getElementById('roleSelect');
+            for (let option of roleSelect.options) {
+                if (option.value === roleId) {
+                    option.selected = true;
+                    break;
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            $('#submitUpdate').on('submit', function(event) {
+                event.preventDefault();
+
+                $('#change_userRole').modal('hide');
+                document.getElementById("loadingMask").style.display = "flex";
+
+                var userId = $('#userId').val();
+                var roleId = $('#roleSelect').val();
+
+                $.ajax({
+                    url: '/Admin/UserManagement/UserRole?handler=UpdateUserRole',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        "XSRF-TOKEN": token
+                    },
+                    data: JSON.stringify({
+                        userId: userId,
+                        roleId: roleId
+                    }),
+                    success: function(response) {
+                        document.getElementById("loadingMask").style.display = "none";
+                        if (response.success) {
+                            showMessageModal(response.message, 'bg-success');
+                            const rowNode = gridApi.getRowNode(userId);
+
+                            if (rowNode) {
+                                rowNode.data.RoleId = roleId;
+                                let roleName = roleData.find(r => r.Id === parseInt(roleId)).Name;
+                                rowNode.setDataValue('RoleId', roleName);
+                                gridApi.refreshCells({ rowNodes: [rowNode], columns: ['RoleId'], force: true });
+                                const userRole = userRoleData.find(ur => ur.UserId === parseInt(userId));
+                                if (userRole) {
+                                    userRole.RoleId = parseInt(roleId);
+                                }
+                                gridApi.refreshCells({ rowNodes: [rowNode], columns: ['Action'], force: true });
+                            }
+                        } else {
+                            showMessageModal(response.message, 'bg-danger');
+                        }
+                    },
+                    error: function(error) {
+                        document.getElementById("loadingMask").style.display = "none";
+                        showMessageModal(error.message, 'bg-danger');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        let roleData = @Html.Raw(roleJson);
+        let userData = @Html.Raw(userJson);
+        let userRoleData = @Html.Raw(userRoleJson);
+
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        const gridOptions = {
+            pagination: true,
+            paginationPageSize: 100,
+            getRowId: params => String(params.data.UserId),
+            paginationPageSizeSelector: [20, 50, 100, 200],
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true,
+                editable: true,
+                minWidth: 200,
+            },
+            rowSelection: { mode: "singleRow" },
+            rowData: userRoleData,
+            columnDefs: [
+                {
+                    headerName: '#',
+                    field: 'index',
+                    valueGetter: params => params.node ? params.node.rowIndex + 1 : '',
+                    sortable: false,
+                    filter: false,
+                    headerClass: 'header-center',
+                    cellStyle: { textAlign: 'center' },
+                    maxWidth: 150
+                },
+                {
+                    headerName: 'Email',
+                    field: 'User',
+                    valueGetter: params => {
+                        const user = userData.find(u => u.Id === params.data.UserId);
+                        return user ? user.Mail : '';
+                    },
+                    editable: false
+                },
+                {
+                    headerName: 'Role',
+                    field: 'RoleId',
+                    editable: false,
+                    cellEditor: 'agSelectCellEditor',
+                    cellEditorParams: {
+                        values: roleData.map(role => role.Name),
+                        formatValue: roleName => {
+                            const role = roleData.find(r => r.Name === roleName);
+                            return role ? role.Name : '';
+                        }
+                    },
+                    valueGetter: params => {
+                        const role = roleData.find(r => r.Id === params.data.RoleId);
+                        return role ? role.Name : '';
+                    },
+                    valueSetter: params => {
+                        const roleName = params.newValue;
+                        const role = roleData.find(r => r.Name === roleName);
+                        if (role) {
+                            params.data.RoleId = role.Id;
+                            return true;
+                        }
+                        return false;
+                    }
+                },
+                {
+                    headerName: "Action",
+                    field: "Action",
+                    minWidth: 100,
+                    cellRenderer: actionRenderer,
+                    headerClass: 'header-center',
+                    cellStyle: { textAlign: 'center' }
+                }
+            ],
+            onGridReady: function(params) {
+                params.api.sizeColumnsToFit();
+            },
+            onCellEditingStopped: function(event) {
+                if (event.colDef.field === 'RoleId') {
+                    const updatedRoleId = event.data.RoleId;
+                    const updatedUserId = event.data.UserId;
+
+                    if (event.oldValue === event.newValue) {
+                        return;
+                    }
+
+                    fetch('/Admin/UserManagement/UserRole?handler=UpdateUserRole', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token,
+                            "XSRF-TOKEN":token
+                        },
+                        body: JSON.stringify({ UserId: updatedUserId, RoleId: updatedRoleId }),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast(data.message, 'success');
+                            } else {
+                                showToast(data.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToast(data.message, 'danger');
+                        });
+                }
+            },
+            onSelectionChanged: function() {
+                const selectedRows = gridApi.getSelectedRows();
+                const removeSelectedButton = document.getElementById('removeSelected');
+                const cancelSelectedButton = document.getElementById('cancelSelected');
+            }
+        }
+
+        document.getElementById('removeSelected').addEventListener('click', function() {
+            const selectedRows = gridApi.getSelectedRows();
+            if (selectedRows.length > 0) {
+                fetch('/Admin/UserManagement/UserRole?handler=DeleteUserRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                        "XSRF-TOKEN": token
+                    },
+                    body: JSON.stringify(selectedRows)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            gridApi.applyTransaction({ remove: selectedRows });
+                            showToast('Roles deleted successfully', 'success');
+                        } else {
+                            showToast('Failed to delete roles', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Error deleting roles', 'danger');
+                    });
+            } else {
+                showToast('No rows selected', 'warning');
+            }
+        });
+
+        document.getElementById('cancelSelected').addEventListener('click', function() {
+            gridApi.deselectAll();
+        });
+
+        const sidebar = document.querySelector(".sidebar");
+        const observer = new MutationObserver(() => {
+            if (gridApi) {
+                setTimeout(() => {
+                    gridApi.sizeColumnsToFit();
+                }, 300);
+            }
+        });
+
+        if (sidebar) {
+            observer.observe(sidebar, { attributes: true, attributeFilter: ["class"] });
+        }
+
+        let gridApi;
+        document.addEventListener("DOMContentLoaded", function () {
+            const myGridElement = document.querySelector('#myGrid');
+            gridApi = agGrid.createGrid(myGridElement, gridOptions);
+        });
+
+    </script>
+}
+

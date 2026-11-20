@@ -1,0 +1,372 @@
+﻿@page
+@model AssetManagement.Web.Pages.AssetMovements.DetailsModel
+
+@{
+    ViewData["Title"] = "Asset Movement Details";
+}
+
+<div class="page-heading">
+    <div class="page-heading-row">
+        <div class="breadcrumb-row">
+            <div class="card">
+                <div class="stat-card ">
+                    <h4>Movement Information</h4>
+                </div>
+                <div class="form-card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>@Model.AssetMovement?.MovementType</h5>
+                        <span class="badge @(Model.AssetMovement?.Status == "Completed" ? "text-bg-success" :
+                                                          Model.AssetMovement?.Status == "Dispatched" ? "text-bg-primary" :
+                                                          Model.AssetMovement?.Status == "Pending Approval" ? "text-bg-warning" : "text-bg-secondary")">
+                            @Model.AssetMovement?.Status
+                        </span>
+                    </div>
+
+                    <div class="app-body">
+                        <div class="col-md-4 fw-bold">Tracking Code:</div>
+                        <div class="col-md-8">@Model.AssetMovement?.TrackingCode</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">From:</div>
+                        <div class="col-md-8">@Model.AssetMovement?.SourceLocation</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">To:</div>
+                        <div class="col-md-8">@Model.AssetMovement?.DestinationLocation</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Current Custodian:</div>
+                        <div class="col-md-8">@Model.AssetMovement?.CurrentCustodian</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.AssetMovement?.NewCustodian))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">New Custodian:</div>
+                            <div class="col-md-8">@Model.AssetMovement?.NewCustodian</div>
+                        </div>
+                    }
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Request Date:</div>
+                        <div class="col-md-8">@Model.AssetMovement?.RequestDate?.ToString("yyyy-MM-dd")</div>
+                    </div>
+
+                    @if ((bool)Model.AssetMovement?.DispatchDate.HasValue)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">Dispatch Date:</div>
+                            <div class="col-md-8">@Model.AssetMovement.DispatchDate?.ToString("yyyy-MM-dd")</div>
+                        </div>
+                    }
+
+                    @if (Model.AssetMovement.AcceptanceDate.HasValue)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">Acceptance Date:</div>
+                            <div class="col-md-8">@Model.AssetMovement.AcceptanceDate.Value.ToString("yyyy-MM-dd")</div>
+                        </div>
+                    }
+
+                    @if (Model.AssetMovement.ExpectedReturnDate.HasValue)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">Expected Return:</div>
+                            <div class="col-md-8">@Model.AssetMovement.ExpectedReturnDate.Value.ToString("yyyy-MM-dd")</div>
+                        </div>
+                    }
+
+                    @if (Model.AssetMovement.ApprovalRequired)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">Approval Required:</div>
+                            <div class="col-md-8">Yes</div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.AssetMovement.ApprovedBy))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-4 fw-bold">Approved By:</div>
+                                <div class="col-md-8">@Model.AssetMovement.ApprovedBy</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-4 fw-bold">Approval Date:</div>
+                                <div class="col-md-8">@Model.AssetMovement.ApprovalDate?.ToString("yyyy-MM-dd")</div>
+                            </div>
+                        }
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.AssetMovement.Comments))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4 fw-bold">Comments:</div>
+                            <div class="col-md-8">@Model.AssetMovement.Comments.Replace(Environment.NewLine, "<br />"))</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Asset Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Asset Name:</div>
+                        <div class="col-md-8">@Model.Asset?.AssetName</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Asset Tag:</div>
+                        <div class="col-md-8">@Model.Asset?.AssetName</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Category:</div>
+                        <div class="col-md-8">@Model.Asset?.AssetNumber</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">
+                            <span class="badge @(Model.Asset?.Status == "Disposed" ? "text-bg-red" :
+                                                 Model.Asset?.Status == "In Transit" ? "text-bg-orange" :
+                                                 Model.Asset?.Status == "In Use" ? "text-bg-success" :
+                                                 Model.Asset?.Status == "Available" ? "text-bg-primary" :
+                                                 Model.Asset?.Status == "Maintenance" ? "text-bg-warning" :
+                                                 Model.Asset?.Status == "Disposed" ? "text-bg-danger" : "text-bg-secondary")">
+                                @Model.Asset?.Status
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Location:</div>
+                        <div class="col-md-8">@Model.Asset?.Location</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <a asp-page="/Assets/Details" asp-route-slug="@Model.Asset?.Slug" class="btn btn-sm btn-outline-primary">
+                                View Complete Asset Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.AssetMovement.MovementType == "Repair" && Model.RepairRecord != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Repair Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Service Provider:</div>
+                            <div class="col-md-9">@Model.RepairRecord.ServiceProvider</div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Issue Description:</div>
+                            <div class="col-md-9">@Model.RepairRecord.IssueDescription</div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Repair Status:</div>
+                            <div class="col-md-9">
+                                <span class="badge @(Model.RepairRecord.RepairStatus == "Completed" ? "bg-success" :
+                                                                          Model.RepairRecord.RepairStatus == "In Progress" ? "bg-primary" :
+                                                                          Model.RepairRecord.RepairStatus == "Unrepairable" ? "bg-danger" : "bg-secondary")">
+                                @Model.RepairRecord.RepairStatus
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RepairRecord.Diagnosis))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Diagnosis:</div>
+                                <div class="col-md-9">@Model.RepairRecord.Diagnosis</div>
+                            </div>
+                        }
+
+                        @if (Model.RepairRecord.RepairCost.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Repair Cost:</div>
+                                <div class="col-md-9">@Model.RepairRecord.RepairCost.Value.ToString("C")</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.RepairRecord.Technician))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Technician:</div>
+                                <div class="col-md-9">@Model.RepairRecord.Technician</div>
+                            </div>
+                        }
+
+                        @if (Model.RepairRecord.StartDate.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Start Date:</div>
+                                <div class="col-md-9">@Model.RepairRecord.StartDate.Value.ToString("yyyy-MM-dd")</div>
+                            </div>
+                        }
+
+                        @if (Model.RepairRecord.CompletionDate.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Completion Date:</div>
+                                <div class="col-md-9">@Model.RepairRecord.CompletionDate.Value.ToString("yyyy-MM-dd")</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.RepairRecord.Notes))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Notes:</div>
+                                <div class="col-md-9">@Html.Raw(Model.RepairRecord.Notes.Replace(Environment.NewLine, "<br />"))</div>
+                            </div>
+                        }
+
+                        <div class="row mb-2">
+                            <div class="col-md-12">
+                                <a asp-page="/AssetMovements/RepairUpdate" asp-route-id="@Model.RepairRecord.Id" class="btn btn-sm btn-outline-primary">
+                                    Update Repair Status
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.AssetMovement.MovementType == "Disposal" && Model.DisposalRecord != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Disposal Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Disposal Method:</div>
+                            <div class="col-md-9">@Model.DisposalRecord.DisposalMethod</div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Reason for Disposal:</div>
+                            <div class="col-md-9">@Model.DisposalRecord.ReasonForDisposal</div>
+                        </div>
+
+                        @if (Model.DisposalRecord.BookValue.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Book Value:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.BookValue.Value.ToString("C")</div>
+                            </div>
+                        }
+
+                        @if (Model.DisposalRecord.DisposalValue.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Disposal Value:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.DisposalValue.Value.ToString("C")</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.DisposalRecord.DisposedTo))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Disposed To:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.DisposedTo</div>
+                            </div>
+                        }
+
+                        @if (Model.DisposalRecord.DisposalDate.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Disposal Date:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.DisposalDate.Value.ToString("yyyy-MM-dd")</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.DisposalRecord.ApprovedBy))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Approved By:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.ApprovedBy</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Approval Date:</div>
+                                <div class="col-md-9">@Model.DisposalRecord.ApprovalDate?.ToString("yyyy-MM-dd")</div>
+                            </div>
+                        }
+
+                        @if (Model.DisposalRecord.HasDisposalCertificate)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Disposal Certificate:</div>
+                                <div class="col-md-9">Available</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.DisposalRecord.Notes))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Notes:</div>
+                                <div class="col-md-9">@Html.Raw(Model.DisposalRecord.Notes.Replace(Environment.NewLine, "<br />"))</div>
+                            </div>
+                        }
+
+                        @if (Model.NeedsApproval)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-12">
+                                    <a asp-page="/AssetMovements/DisposalApproval" asp-route-id="@Model.DisposalRecord.Id" class="btn btn-sm btn-warning">
+                                        Approve Disposal
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex gap-2">
+                @if (Model.CanDispatch)
+                {
+                    <a asp-page="./Dispatch" asp-route-id="@Model.AssetMovement.Id" class="btn btn-primary">
+                        Dispatch Asset
+                    </a>
+                }
+
+                <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+
+                @if (Model.AssetMovement.Status == "Pending" || Model.AssetMovement.Status == "Pending Approval")
+                {
+                    <a asp-page="./Edit" asp-route-id="@Model.AssetMovement.Id" class="btn btn-outline-secondary">Edit</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

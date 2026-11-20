@@ -1,0 +1,614 @@
+﻿@page
+@using System.Text.Json
+@model Index
+@{
+    Layout = "_Layout";
+    var dataJson = JsonSerializer.Serialize(Model.Users);
+}
+
+<div id="loadingMask">
+    <div class="spinner-border text-white">
+    </div>
+</div>
+
+<div class="modal fade" 
+     id="errorModal" 
+     tabindex="-1" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content rounded-0">
+            <div class="modal-header text-white">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorModalMessage">An error occurred. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="page-header">
+        <div class="row">
+            <div class="col-12">
+                <h3 class="text-header">
+                    User Management</h3>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-12 gap-3">
+            <button class="btn-custom btn-search px-5"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#staticSearchBackdrop">
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     width="16" 
+                     height="16" 
+                     fill="currentColor" 
+                     class="bi bi-search" 
+                     viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                </svg>
+            </button>
+            <a asp-page="/Admin/UserManagement" class="btn-custom btn-clear px-5"
+                                                style="padding-top:10px;padding-bottom: 13px">Clear</a>
+            <button class="btn-custom btn-export px-5"
+                    onclick="onBtnExport()">
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     width="16" 
+                     height="16" 
+                     fill="currentColor" 
+                     class="bi bi-printer" 
+                     viewBox="0 0 16 16">
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+                </svg>
+                Export Csv
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="myGrid" 
+                 class="ag-theme-quartz mt-3" 
+                 style="height: calc(100vh - 170px)">
+                @Html.AntiForgeryToken()
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Modal -->
+<div
+    class="modal fade" id="staticSearchBackdrop"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="staticSearchBackdropLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered custom-modal-width">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" 
+                    id="staticSearchBackdropLabel"></h1>
+                <button type="button" 
+                        class="btn-close" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            <form class="modal-search" 
+                  method="get">
+                <h4 class="mb-2">Advance Search</h4>
+                <div class="modal-body">
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 30%; padding-right: 10px;">
+                            <select style="padding-top: 9px; padding-bottom: 9px;" 
+                                    class="form-select" 
+                                    id="searchType" 
+                                    aria-label="Search type selection">
+                                <option selected value="Mail">Email</option>
+                            </select>
+                        </div>
+                        <div style="width: 70%;">
+                            <input 
+                                type="text"
+                                id="searchValue"
+                                class="form-control"
+                                placeholder="Search By Loan Id"
+                                aria-label="Search By Loan Id"
+                                aria-describedby="basic-addon1"
+                                required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" 
+                            class="normal-button" 
+                            data-bs-dismiss="modal">Close</button>
+                    <button type="submit" 
+                            class="normal-button">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- end search modal-->
+
+<!-- Update Modal -->
+<div
+    class="modal fade" 
+    id="staticBackdrop"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="staticBackdropLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered custom-modal-update-width">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" 
+                    id="staticBackdropLabel"></h1>
+                <button type="button" 
+                        class="btn-close"
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            <form class="modal-update" 
+                  method="post">
+                <h2 class="mb-2 text-center">Update User</h2>
+                <div class="modal-body">
+                    <!-- Personal Information as Timeline -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
+                        <div class="timeline-container">
+                            <!-- User Profile Summary -->
+                            <div class="d-flex align-items-center mb-4">
+                                <div>
+                                    <h4 class="mb-0" 
+                                        id="displayName"></h4>
+                                    <p class="text-muted mb-0" 
+                                       id="displayEmail"></p>
+                                    <p class="text-muted mb-0" 
+                                       id="displayStaffID"></p>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Items -->
+                            <ul class="timeline ms-3">
+                                <li class="timeline-item mb-4">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 id="BranchName" 
+                                            class="timeline-title"></h6>
+                                    </div>
+                                </li>
+
+                                <li class="timeline-item mb-4">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 id="Department" 
+                                            class="timeline-title"></h6>
+                                    </div>
+                                </li>
+
+                                <li class="timeline-item mb-4">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 id="PostTitle" 
+                                            class="timeline-title"></h6>
+                                    </div>
+                                </li>
+
+                                <li class="timeline-item mb-4">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 id="EmpCate" 
+                                            class="timeline-title"></h6>
+                                    </div>
+                                </li>
+
+                                <li class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 id="lastLogin" 
+                                            class="timeline-title"></h6>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <!-- Simplified Account Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">Account Settings</h5>
+                        <input type="hidden" 
+                               id="id" 
+                               value="" />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="specialUser" 
+                                       class="form-label">Special User</label>
+                                <select class="form-select" 
+                                        id="specialUser" 
+                                        name="specialUser">
+                                    <option value="Y">Yes</option>
+                                    <option value="N">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="accountStatus" 
+                                       class="form-label">Account Status</label>
+                                <select class="form-select" 
+                                        id="accountStatus" 
+                                        name="accountStatus">
+                                    <option value="Y">Enabled</option>
+                                    <option value="N">Disabled</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="remark" 
+                                       class="form-label">Remarks</label>
+                                <textarea style="min-height: 100px" 
+                                          class="form-control" 
+                                          id="remark" 
+                                          name="remark" 
+                                          rows="3" 
+                                          placeholder="Add any notes or comments about this user"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" 
+                            class="normal-button" 
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" 
+                            class="normal-button">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- end update modal-->
+
+@section Scripts {
+    
+    <script>
+        function showMessageModal(errorMessage, bgColor = "bg-danger") {
+            if (bgColor === "bg-success") {
+                modalTitle = "";
+            } else if (bgColor === "bg-warning") {
+                modalTitle = "Warning";
+            } else if (bgColor === "bg-info") {
+                modalTitle = "Information";
+            }else if (bgColor === "bg-danger"){
+                modalTitle = "Error";
+            }
+
+            $('#errorModal .modal-header')
+                .removeClass("bg-danger bg-warning bg-info bg-success bg-primary bg-secondary")
+                .addClass(`${bgColor} text-white`);
+            $('#errorModal .modal-title').text(modalTitle);
+            $('#errorModalMessage').text(errorMessage);
+            $('#errorModal').modal('show');
+        }
+
+        const badgeRenderer = (params, trueText, falseText, trueClass, falseClass) => {
+            return params.value === "Y"
+                ? `<span class="${trueClass}">${trueText}</span>`
+                : `<span class="${falseClass}">${falseText}</span>`;
+        };
+
+        function actionRenderer(params) {
+            const userData = JSON.stringify(params.data);
+            
+            if (userData === undefined) {
+                return '';
+            }
+            
+            return `
+                  <span class="normal-button-icons" 
+                        data-bs-toggle="modal"
+                        data-bs-target="#staticBackdrop"
+                        data-user='${encodeURIComponent(userData)}'>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#899bbd" class="bi bi-person-check" viewBox="0 0 16 16">
+                          <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+                          <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+                      </svg>
+                  </span>
+                `;
+        }
+        
+    </script>
+    <script>
+        const dataJson = @Html.Raw(dataJson);
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : '';
+        
+        const gridOptions = {
+            pagination: true,
+            paginationPageSize: 100,
+            paginationPageSizeSelector: [20, 50, 100, 200],
+            rowSelection: { mode: "singleRow" },
+            getRowId: params => String(params.data.Id),
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true,
+                editable: false,
+                enableCellChangeFlash: true,
+            },
+            suppressExcelExport: true,
+            popupParent: document.body,
+            rowData: dataJson,
+            columnDefs: [
+                { 
+                    headerName:"", 
+                    field: "Action",
+                    filter: false,
+                    sortable: false,
+                    cellRenderer: actionRenderer,
+                    maxWidth: 80,
+                },
+                { 
+                    headerName:"StaffId" , 
+                    field: "StaffId", 
+                    filter: 'agTextColumnFilter',
+                    cellClass: 'grid-cell-color',
+                    maxWidth: 120,
+                },
+                { 
+                    headerName:"BrCode", 
+                    field: "BranchCode", 
+                    filter: 'agTextColumnFilter',
+                    maxWidth: 120,
+                },
+                { 
+                    headerName:"Email", 
+                    field: "Mail", 
+                    filter: 'agTextColumnFilter',
+                    minWidth: 250,
+                },
+                { headerName:"BrName", field: "BranchName", filter: 'agTextColumnFilter'},
+                { 
+                    headerName:"Courtesy", 
+                    field: "Courtesy",
+                    filter: 'agTextColumnFilter',
+                    maxWidth: 120,
+                },
+                { headerName:"FirstName", field: "FirstName",filter: 'agTextColumnFilter',editable: false},
+                { headerName:"LastName", field: "LastName",filter: 'agTextColumnFilter' ,editable: false },
+                { headerName:"KhmerName", field: "KhmerName",filter: 'agTextColumnFilter' ,editable: false },
+                { headerName:"Gender", field: "Gender", filter: 'agTextColumnFilter' ,editable: false},
+                { 
+                    headerName:"PostTitle", 
+                    field: "PostTitle",
+                    filter: 'agTextColumnFilter',
+                    minWidth: 300,
+                },
+                { headerName:"Department", field: "Department",filter: 'agTextColumnFilter'  },
+                { headerName:"DisplayName", field: "DisplayName",filter: 'agTextColumnFilter' ,editable: false },
+                { headerName:"Username", field: "Username",filter: 'agTextColumnFilter' ,editable: false },
+                { headerName:"Material_Status", field: "MaterialStatus",filter: 'agTextColumnFilter' ,editable: false },
+                { headerName:"Mobile", field: "Mobile",filter: 'agTextColumnFilter' },
+                { headerName:"DateJoin", field: "DateJoin",filter: 'agTextColumnFilter',editable: false },
+                { headerName:"Created Date", field: "Createdate",filter: 'agDateColumnFilter',editable: false },
+                { headerName:"Updated Date", field: "Updatedate",filter: 'agDateColumnFilter',editable: false },
+                { 
+                    headerName: "Status", 
+                    field: "Active", 
+                    filter:'agTextColumnFilter',
+                    cellRenderer: (params) => badgeRenderer(params, "Enable", "Disable", "badge badge-success", "badge badge-danger"),
+                },
+                { 
+                    headerName: "Special User", 
+                    field: "SpecialUser", 
+                    filter:'agTextColumnFilter',
+                    cellRenderer: (params) => badgeRenderer(params, "Yes", "No", "badge badge-success", "badge badge-warning"),
+                }
+            ],
+            onCellEditingStopped: function(event) {
+
+                if (event.oldValue === event.newValue) {
+                    return;
+                }
+                
+                const updatedData = event.data;
+                fetch('/Admin/UserManagement/Index?handler=UpdateUser', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                        "XSRF-TOKEN":token
+                    },
+                    body: JSON.stringify(updatedData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessageModal(data.message, 'bg-success');
+                        } else {
+                            showMessageModal(data.message, 'bg-danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast(data.message, 'danger');
+                    });
+            }
+        };
+
+        let gridApi;
+        document.addEventListener("DOMContentLoaded", function () {
+            const myGridElement = document.querySelector('#myGrid');
+            gridApi = agGrid.createGrid(myGridElement, gridOptions);
+        });
+
+        $(document).ready(function() {
+            $(document).on('click', '.normal-button-icons', function() {
+                try {
+                    const encodedUserData = $(this).data('user');
+                    const userData = JSON.parse(decodeURIComponent(encodedUserData));
+
+                    $('#displayName').text(userData.Courtesy +' '+ userData.FirstName + ' ' + userData.LastName || 'Unknown User');
+                    $('#displayEmail').text(userData.Mail || '');
+                    $('#displayStaffID').text(userData.StaffId || '');
+
+                    if (userData.BranchName) {
+                        $('#BranchName').html('<span style="font-weight: bold; font-size:14px;">Branch Name</span> : ' + userData.BranchName);
+                    }
+                    if (userData.Department) {
+                        $('#Department').html('<span style="font-weight: bold; font-size:14px;">Department</span> : ' + userData.Department);
+                    }
+                    if (userData.PostTitle) {
+                        $('#PostTitle').html('<span style="font-weight: bold; font-size:14px;">Position Title</span> : ' + userData.PostTitle);
+                    }
+                    if (userData.EmpCategory) {
+                        $('#EmpCate').html('<span style="font-weight: bold; font-size:14px;">Employee Category</span> : ' + userData.EmpCategory);
+                    }
+
+                    $('#lastLogin').html('<span style="font-weight: bold; font-size:14px;">Last Login</span> : ' + (userData.LastLogin?.replace("T", " ") ?? 'never'));
+
+                    if (userData.SpecialUser) {
+                        $('#specialUser').val(userData.SpecialUser);
+                    }
+                    
+                    if (userData.Id){
+                        $('#id').val(userData.Id);
+                    }
+                    
+                    if (userData.Active) {
+                        $('#accountStatus').val(userData.Active);
+                    }
+                    
+                    if (userData.Remark) {
+                        $('#remark').val(userData.Remark);
+                    }
+
+                } catch (error) {
+                    showMessageModal(error.message,'bg-danger');
+                }
+            });
+
+            $('#staticBackdrop').on('hidden.bs.modal', function() {
+                $('#remark').val('');
+            });
+            
+        });
+
+
+        $('.modal-update').on('submit', function(e) {
+            e.preventDefault();
+            $('#staticBackdrop').modal('hide');
+            document.getElementById('loadingMask').style.display = 'flex';
+
+            const userStatusViewModel = {
+                id: $('#id').val(),
+                specialUser: $('#specialUser').val(),
+                accountStatus: $('#accountStatus').val(),
+                remark: $('#remark').val()
+            };
+
+            $.ajax({
+                url: '/Admin/UserManagement?handler=UpdateStatus',
+                type: 'POST',
+                data: JSON.stringify(userStatusViewModel),
+                headers:{
+                    "Content-Type": "application/json",
+                    'RequestVerificationToken': token,
+                    "XSRF-TOKEN":token
+                },
+                contentType: 'application/json',
+                success: function(response) {
+                    document.getElementById('loadingMask').style.display = 'none';
+                    if (response.success) {
+                        showMessageModal(response.message, 'bg-success');
+                        const rowNode = gridApi.getRowNode(userStatusViewModel.id);
+
+                        if (rowNode) {
+                            rowNode.data.SpecialUser = userStatusViewModel.specialUser;
+                            rowNode.setDataValue('SpecialUser', userStatusViewModel.specialUser);
+                            rowNode.data.Active = userStatusViewModel.accountStatus;
+                            rowNode.setDataValue('Active', userStatusViewModel.accountStatus);
+                            rowNode.data.Remark = userStatusViewModel.remark;
+                            rowNode.setDataValue('Remark', userStatusViewModel.remark);
+                            gridApi.refreshCells({ rowNodes: [rowNode], columns: ['SpecialUser'], force: true });
+                            gridApi.refreshCells({ rowNodes: [rowNode], columns: ['Action'], force: true });
+                            gridApi.refreshCells({ rowNodes: [rowNode], columns: ['Active'], force: true });
+                            gridApi.refreshCells({ rowNodes: [rowNode], columns: ['Remark'], force: true });
+                        }
+                    } 
+                    else {
+                        showMessageModal(response.message, 'bg-danger');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById('loadingMask').style.display = 'none';
+                    showMessageModal(error.message, 'bg-danger');
+                }
+            });
+        });
+        
+        function onBtnExport() {
+            gridApi.exportDataAsCsv();
+        }
+
+        $(document).ready(function() {
+            $('.modal-search').on('submit', function(event) {
+                event.preventDefault();
+
+                var searchType = $('#searchType').val();
+                var searchValue = $('#searchValue').val().trim();
+
+                if (!searchValue) {
+                    gridApi.setFilterModel(null);
+                    return;
+                }
+
+                var filterColumn;
+                switch (searchType) {
+                    case 'Mail':
+                        filterColumn = 'Mail';
+                        break;
+                    case 'StaffId':
+                        filterColumn = 'StaffId';
+                        break;
+                    case 'FirstName':
+                        filterColumn = 'FirstName';
+                        break;
+                    case 'BranchCode':
+                        filterColumn = 'BranchCode';
+                        break;
+                    default:
+                        filterColumn = 'Mail';
+                }
+
+                var filterModel = {};
+
+                if (filterColumn === 'Createdate' || filterColumn === 'Updatedate' || filterColumn === 'DateJoin') {
+                    filterModel[filterColumn] = {
+                        type: 'date',
+                        dateFrom: searchValue,
+                        filterType: 'equals'
+                    };
+                } else {
+                    filterModel[filterColumn] = {
+                        type: 'text',
+                        filter: searchValue,
+                        filterType: 'contains'
+                    };
+                }
+
+                gridApi.setFilterModel(filterModel);
+
+                $('.modal').modal('hide');
+            });
+        });
+        
+    </script>
+}      

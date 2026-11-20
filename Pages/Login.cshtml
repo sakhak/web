@@ -1,0 +1,60 @@
+﻿@page
+@model AssetManagement.Web.Pages.LoginModel
+@{
+    Layout = "_LoginLayout";
+}
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <a href="/" class="navbar-brand navbar-brand-autodark">
+                <img src="~/img/lolc.png" width="110" height="110" alt="LOLC" />
+            </a>
+        </div>
+
+        <div class="card card-md shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="h2 mb-4">Login to your account</h2>
+                @if (Model.UseLocalLogin)
+                {
+                    <p class="text-secondary mb-4">Sign in with a local account.</p>
+                    <form method="post" asp-page-handler="LocalSignIn">
+                        <input type="hidden" asp-for="ReturnUrl" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="mb-3">
+                            <input asp-for="Input.Username" class="form-control" placeholder="Username" autocomplete="username" />
+                            <span asp-validation-for="Input.Username" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <input asp-for="Input.Password" class="form-control" placeholder="Password" autocomplete="current-password" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-secondary mb-4">
+                        Please use your LOLC corporate email account to continue.
+                    </p>
+
+                    <a asp-page-handler="SignIn" asp-route-returnUrl="/AzureCallback"
+                       class="btn btn-primary w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24"
+                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M9 9h6v6h-6z" />
+                        </svg>
+                        Login with LOLC Email
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="text-center text-secondary mt-3 small">
+            &copy; @DateTime.Now.Year LOLC Cambodia Plc
+        </div>
+    </div>
+</div>

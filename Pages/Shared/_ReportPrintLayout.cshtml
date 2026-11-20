@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/report-print.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="print-toolbar">
+        <button type="button" onclick="window.print()">Print / Save as PDF</button>
+        <span>Choose "Save as PDF" as the destination. Landscape works best for wide reports.</span>
+    </div>
+    @RenderBody()
+    <script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 300); });</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #E2E8F0;
+    margin-bottom: 20px;
+}
+
+.tab-link {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748B;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tab-link:hover { color: #0F172A; text-decoration: none; }
+.tab-link.active { color: #1D4ED8; border-bottom-color: #1D4ED8; }
+
+.alert-success-modern {
+    background: #F0FDF4;
+    border: 1px solid #86EFAC;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #166534;
+    margin-bottom: 20px;
+}
+
+.validation-summary-valid { display: none; }
+
+.line-table .form-input-modern,
+.line-table .form-select-modern {
+    padding: 7px 10px;
+    font-size: 12.5px;
+}
+
+.row-remove {
+    border: none;
+    background: transparent;
+    color: #94A3B8;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.row-remove:hover { color: #DC2626; }
+
+.schedule-table td, .schedule-table th { font-size: 12.5px; }

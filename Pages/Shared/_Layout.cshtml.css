@@ -1,0 +1,107 @@
+﻿/* sidebar navlinks */
+#bell-notification {
+    color: black !important;
+}
+
+    #bell-notification:hover {
+        color: #0054a6 !important;
+    }
+
+.dropdown-toggle.show:after {
+    transform: rotate(-45deg);
+}
+
+.custom-navbar-toggler {
+    border: 0;
+    margin: 8px 0 8px 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-navbar-toggler-icon {
+    display: inline-block;
+    width: 1.6em;
+    height: 1.6em;
+    vertical-align: middle;
+    background-image: url("img/menu-arrow-left.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100%;
+}
+
+.custom-navbar-toggler-icon-expanded {
+    background-image: url("img/menu-arrow-right.svg");
+}
+
+.navbar-expand-lg {
+    /*width: 15rem;*/
+}
+
+.navbar-collapsed {
+    width: 0 !important;
+    overflow: hidden;
+}
+
+@media (min-width: 992px) {
+    .navbar-collapsed.navbar-vertical ~ .navbar,
+    .navbar-collapsed.navbar-vertical ~ .page-wrapper {
+        margin-left: 0 !important;
+    }
+}
+
+#sidebar {
+    transition: width 0.3s ease !important;
+}
+
+.page-wrapper {
+    transition: margin-left 0.3s ease !important;
+}
+
+.search-button {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+    .search-button:hover {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+
+#search-modal .modal-content {
+    background-color: white;
+    max-width: 550px;
+    margin: 0 auto;
+}
+
+#search-modal .input-group {
+    background-color: #f5f7fa;
+}
+
+#search-modal input.form-control {
+    background-color: transparent;
+    height: 44px;
+}
+
+#search-modal kbd {
+    background-color: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 11px;
+    color: #555;
+}
+
+#search-modal .text-primary {
+    color: #5468ff !important;
+}
+
+.form-control:focus {
+    box-shadow: none !important;
+    border-color: lightgrey !important;
+}
+
+.dropdown-menu-arrow .dropdown-item:hover {
+    color: lightgrey;
+}
+/* sidebar navlinks */

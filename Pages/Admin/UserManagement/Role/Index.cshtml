@@ -1,0 +1,280 @@
+﻿@page
+@using System.Text.Json
+@model Index
+@{
+    Layout = "_Layout";
+    var dataJson = JsonSerializer.Serialize(Model.Role);
+}
+<div id="toast-message">
+</div>
+<div>
+    <div>
+        <div class="page-header">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="text-header">Role Management</h3>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-6 d-flex justify-content-start">
+                <button class="normal-button" href="#add_role" data-bs-toggle="modal" data-target="#add_role"><i class="fa fa-plus"></i> Create New</button>
+            </div>
+            <div class="col-sm-6 col-6">
+                <div class="d-flex text-nowrap align-items-center gap-3 col-12">
+                    <button id="removeSelected" class="normal-button bg-danger text-white" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                        </svg>
+                        remove
+                    </button>
+                    <button id="cancelSelected" class="normal-button" style="display: none;">cancel</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="myGrid" class="ag-theme-quartz" style="height: calc(100vh - 170px)">
+                    @Html.AntiForgeryToken()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Role Modal -->
+    <div class="modal custom-modal fade" id="add_role" aria-hidden="true" aria-labelledby="add_role" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-0">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-labelledby="Close" tabindex="-1">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRoleForm">
+                        <div class="form-group">
+                            <label>Name <span class="text-danger">*</span></label>
+                            <input class="form-control" type="text" id="roleName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Remark <span class="text-danger">*</span></label>
+                            <input class="form-control" type="text" id="roleRemark" required>
+                        </div>
+                        <div class="submit-section">
+                            <button type="submit" class="btn lolc-bg submit-btn">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Role Modal -->
+</div>
+
+@section Scripts {
+    <script>
+        function showToast(message, type = 'success', delay = 3000) {
+            const toastContainer = document.getElementById('toast-message');
+            toastContainer.className = `z-1000 position-fixed end-0 me-4 toast align-items-center text-white bg-${type} border-0`;
+            toastContainer.setAttribute('role', 'alert');
+            toastContainer.setAttribute('aria-live', 'assertive');
+            toastContainer.setAttribute('aria-atomic', 'true');
+
+            // Create toast content
+            toastContainer.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            // Show toast
+            const toast = new bootstrap.Toast(toastContainer, { delay: delay });
+            toast.show();
+
+            // Remove toast content after it hides
+            toastContainer.addEventListener('hidden.bs.toast', () => {
+                toastContainer.innerHTML = '';
+            });
+        }
+    </script>
+
+    <script>
+        const dataJson = @Html.Raw(dataJson);
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        const gridOptions = {
+            autoSizeStrategy: {
+                type: 'fitGridWidth',
+                fit: true,
+            },
+            enableCellTextSelection: true,
+            pagination: true,
+            paginationPageSize: 100,
+            paginationPageSizeSelector: [20, 50, 100, 200],
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true,
+                editable: true,
+            },
+            rowSelection: { mode: "multiRow" },
+            rowData: dataJson,
+            columnDefs: [
+                { headerName: '#',
+                    field: 'index',
+                    valueGetter: params => params.node ? params.node.rowIndex + 1 : '',
+                    sortable: false,
+                    filter: false,
+                    width: 60
+                },
+                { headerName:"Name",field: "Name", filter: 'agTextColumnFilter'},
+                { headerName: "Remark",field: "Remark", filter:'agTextColumnFilter'},
+            ],
+            onCellEditingStopped: function(event) {
+                if (event.oldValue === event.newValue) {
+                    return;
+                }
+
+                const updatedData = event.data;
+                fetch('/Admin/UserManagement/Role?handler=UpdateRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                        "XSRF-TOKEN":token
+                    },
+                    body: JSON.stringify(updatedData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                        } else {
+                            showToast(data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast(data.message, 'danger');
+                    });
+            },
+            onGridReady: function(params) {
+                params.api.sizeColumnsToFit();
+            },
+            onSelectionChanged: function() {
+                const selectedRows = gridApi.getSelectedRows();
+                const removeButton = document.getElementById('removeSelected');
+                const cancelButton = document.getElementById('cancelSelected');
+                if (selectedRows.length > 0) {
+                    removeButton.style.display = 'block';
+                    cancelButton.style.display = 'block';
+                } else {
+                    removeButton.style.display = 'none';
+                    cancelButton.style.display = 'none';
+                }
+            }
+        };
+
+        let gridApi;
+        let modal = new bootstrap.Modal('#add_role');
+        document.addEventListener("DOMContentLoaded", function () {
+            const myGridElement = document.querySelector('#myGrid');
+            gridApi = agGrid.createGrid(myGridElement, gridOptions);
+        });
+
+        const sidebar = document.querySelector(".sidebar");
+        const observer = new MutationObserver(() => {
+            if (gridApi) {
+                setTimeout(() => {
+                    gridApi.sizeColumnsToFit();
+                }, 250);
+            }
+        });
+
+        if (sidebar) {
+            observer.observe(sidebar, { attributes: true, attributeFilter: ["class"] });
+        }
+
+        document.getElementById('addRoleForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const roleName = document.getElementById('roleName').value;
+            const roleRemark = document.getElementById('roleRemark').value;
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+
+            fetch('/Admin/UserManagement/Role?handler=AddRole', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token,
+                    "XSRF-TOKEN": token
+                },
+                body: JSON.stringify({ Name: roleName, Remark: roleRemark })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        gridApi.applyTransaction({ add: [{
+                            Id: data.data.id,
+                            Name: data.data.name,
+                            Remark: data.data.remark,
+                            }] });
+                        modal.hide();
+                        document.getElementById('addRoleForm').reset();
+                        showToast('Role added successfully', 'success');
+                    } else {
+                        showToast(data.message, 'danger');
+                        modal.hide();
+                    }
+                })
+                .catch(error => {
+                    showToast('Error adding role', 'danger');
+                    modal.hide();
+                });
+        });
+
+        document.getElementById('removeSelected').addEventListener('click', function() {
+            const selectedRows = gridApi.getSelectedRows();
+            if (selectedRows.length > 0) {
+                fetch('/Admin/UserManagement/Role?handler=DeleteRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                        "XSRF-TOKEN": token
+                    },
+                    body: JSON.stringify(selectedRows)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            gridApi.applyTransaction({ remove: selectedRows });
+                            showToast('Roles deleted successfully', 'success');
+                        } else {
+                            showToast('Failed to delete roles', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Error deleting roles', 'danger');
+                    });
+            } else {
+                showToast('No rows selected', 'warning');
+            }
+        });
+
+        document.getElementById('cancelSelected').addEventListener('click', function() {
+            gridApi.deselectAll();
+        });
+
+        window.addEventListener('resize', function() {
+            gridApi.sizeColumnsToFit();
+        });
+
+    </script>
+}

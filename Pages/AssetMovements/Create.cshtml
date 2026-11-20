@@ -1,0 +1,802 @@
+@page
+@model AssetManagement.Web.Pages.AssetMovements.CreateModel
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Asset Movement";
+    ViewData["Page-PreTitle"] = "Overview";
+    var initials = string.Join("", (Model.AssetMovement?.CurrentCustodian ?? "CU")
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2).Select(w => char.ToUpper(w[0]).ToString()));
+}
+
+@section Styles {
+<style>
+    /* Movement-type pill buttons */
+    .movement-option { display: inline-block; }
+    .movement-option input[type="radio"] { display: none; }
+    .movement-option span {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 36px; padding: 0 18px;
+        border: 1.5px solid #E2E8F0; border-radius: 8px;
+        font-size: 13px; font-weight: 500; color: #475569;
+        cursor: pointer; background: white;
+        transition: all .15s; white-space: nowrap;
+    }
+    .movement-option input:checked + span {
+        background: #EDE9FE; border-color: #6D28D9; color: #5B21B6; font-weight: 600;
+    }
+    .movement-option input:disabled + span { opacity: .35; cursor: not-allowed; }
+
+    /* Toggle switch */
+    .toggle-wrap { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-wrap input { position: absolute; opacity: 0; width: 44px; height: 24px; z-index: 1; cursor: pointer; margin: 0; }
+    .toggle-track { position: absolute; inset: 0; background: #CBD5E1; border-radius: 99px; transition: background .2s; }
+    .toggle-thumb { position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform .2s; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .toggle-wrap input:checked ~ .toggle-track { background: #6D28D9; }
+    .toggle-wrap input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+    /* Priority pills */
+    .priority-pill {
+        padding: 6px 11px; border-radius: 7px; cursor: pointer; font-size: 12.5px;
+        font-weight: 500; transition: all .15s; border: 1.5px solid #E5E7EB;
+        background: white; color: #374151; user-select: none;
+    }
+    .priority-pill.active-low      { background: #ECFDF5; color: #065F46; border-color: #86EFAC; }
+    .priority-pill.active-medium   { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
+    .priority-pill.active-high     { background: #FFF7ED; color: #9A3412; border-color: #FDBA74; }
+    .priority-pill.active-critical { background: #FEF2F2; color: #991B1B; border-color: #FCA5A5; }
+
+    /* Custodian read-only display */
+    .custodian-display {
+        display: flex; align-items: center; gap: 10px;
+        border: 1.5px solid #E5E7EB; border-radius: 8px;
+        padding: 8px 14px; background: #F9FAFB;
+    }
+    .custodian-avatar {
+        width: 28px; height: 28px; background: #6D28D9; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* File upload drop zone */
+    .upload-zone {
+        border: 2px dashed #D1D5DB; border-radius: 10px; padding: 20px;
+        text-align: center; cursor: pointer; background: #F9FAFB;
+        transition: border-color .15s, background .15s;
+    }
+    .upload-zone:hover { border-color: #6D28D9; background: #F5F3FF; }
+
+    /* Approval box */
+    .approval-box {
+        padding: 16px; background: #F9FAFB; border-radius: 10px; border: 1.5px solid #E5E7EB;
+        margin-top: 20px;
+    }
+</style>
+}
+
+<!-- Page heading -->
+<div class="page-heading">
+    <div class="breadcrumb-row">
+        <span class="crumb muted">Overview</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="crumb muted">Asset Movements</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="crumb active">Create Movement</span>
+    </div>
+    <div class="page-heading-row">
+        <div>
+            <h1 class="page-title">Create Asset Movement</h1>
+            <p class="page-subtitle">Record a new transfer, repair, or disposal for an asset.</p>
+        </div>
+        <div class="page-actions">
+            <a asp-page="/AssetMovements/Index" class="btn-modern btn-secondary-modern">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to Movements
+            </a>
+        </div>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-danger-modern"></div>
+
+<div style="display:grid; grid-template-columns:1fr 308px; gap:20px; align-items:start;">
+
+    <!-- ── Left: Form ── -->
+    <form method="post">
+        <input type="hidden" asp-for="AssetMovement.AssetId" />
+
+        <!-- Movement Type -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="form-card-stripe blue"></div>
+                <h4 class="form-card-title">Movement Type</h4>
+            </div>
+            <div class="form-card-body">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+                    @if (Model.PermOfMovement?.Transter == true) {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="transferType" value="Transfer" autocomplete="off" checked />
+                            <span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14M14 6l6 6-6 6M10 18l-6-6 6-6"/>
+                                </svg>
+                                Transfer
+                            </span>
+                        </label>
+                    } else {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="transferType" value="Transfer" autocomplete="off" disabled />
+                            <span>Transfer</span>
+                        </label>
+                    }
+
+                    @if (Model.PermOfMovement?.Repair == true) {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="repairType" value="Repair" autocomplete="off" />
+                            <span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M7 8a4 4 0 0 1 5-3l-2 2 3 3 2-2a4 4 0 0 1-3 5l-5 5a2 2 0 0 1-3-3z"/>
+                                    <circle cx="17" cy="7" r="2"/>
+                                </svg>
+                                Repair
+                            </span>
+                        </label>
+                    } else {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="repairType" value="Repair" autocomplete="off" disabled />
+                            <span>Repair</span>
+                        </label>
+                    }
+
+                    @if (Model.PermOfMovement?.Deposal == true) {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="disposalType" value="Disposal" autocomplete="off" />
+                            <span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 7h16M10 11v6M14 11v6"/>
+                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/>
+                                    <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                                Disposal
+                            </span>
+                        </label>
+                    } else {
+                        <label class="movement-option">
+                            <input type="radio" name="MovementType" id="disposalType" value="Disposal" autocomplete="off" disabled />
+                            <span>Disposal</span>
+                        </label>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Movement Details — single card, type-conditional sections -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="form-card-stripe indigo"></div>
+                <h4 class="form-card-title">Movement Details</h4>
+            </div>
+            <div class="form-card-body">
+
+                <!-- ═══════════ TRANSFER ═══════════ -->
+                <div id="transferSection">
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label asp-for="AssetMovement.SourceLocation" class="form-label-modern"></label>
+                            <select asp-for="AssetMovement.SourceLocation" class="form-select-modern">
+                                <option value="">Select source location...</option>
+                                @foreach (var department in Model.Departments)
+                                {
+                                    <option value="@department.NameEn">@department.NameEn</option>
+                                }
+                            </select>
+                            <span asp-validation-for="AssetMovement.SourceLocation" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="AssetMovement.DestinationLocation" class="form-label-modern"></label>
+                            <select asp-for="AssetMovement.DestinationLocation" class="form-select-modern">
+                                <option value="">Select destination...</option>
+                                @foreach (var department in Model.Departments)
+                                {
+                                    <option value="@department.NameEn">@department.NameEn</option>
+                                }
+                            </select>
+                            <span asp-validation-for="AssetMovement.DestinationLocation" class="form-error"></span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label class="form-label-modern">Current Custodian</label>
+                            <input type="hidden" asp-for="AssetMovement.CurrentCustodian" />
+                            <div class="custodian-display">
+                                <div class="custodian-avatar">
+                                    <span style="color:white; font-size:10px; font-weight:600;">@initials</span>
+                                </div>
+                                <div>
+                                    <div style="font-size:13.5px; font-weight:500; color:#374151; line-height:1.2;">@Model.AssetMovement?.CurrentCustodian</div>
+                                    <div style="font-size:11px; color:#9CA3AF;">@Model.Asset?.Department</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label-modern">
+                                New Custodian
+                                <span id="newCustodianLookupText" style="font-size:11px; font-weight:400; color:#9CA3AF; margin-left:4px;">— User Lookup</span>
+                            </label>
+                            <input asp-for="AssetMovement.NewCustodianId" id="newCustodianStaffId" class="form-input-modern"
+                                   placeholder="Enter staff ID..." autocomplete="off" />
+                            <input type="hidden" asp-for="AssetMovement.NewCustodian" id="newCustodianFullName" />
+                            <input type="hidden" asp-for="AssetMovement.NewCustodianEmail" id="newCustodianEmail" />
+                            <span asp-validation-for="AssetMovement.NewCustodianId" class="form-error"></span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label-modern">Transfer Reason <span style="color:#EF4444;">*</span></label>
+                        <select name="TransferReason" class="form-select-modern">
+                            <option value="">Select reason...</option>
+                            <option value="Departmental Transfer">Departmental Transfer</option>
+                            <option value="Employee Reassignment">Employee Reassignment</option>
+                            <option value="Branch Relocation">Branch Relocation</option>
+                            <option value="Temporary Loan">Temporary Loan</option>
+                            <option value="Project Assignment">Project Assignment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label asp-for="AssetMovement.Comments" class="form-label-modern"></label>
+                        <textarea asp-for="AssetMovement.Comments" class="form-textarea-modern" rows="3" placeholder="Add transfer notes or instructions..."></textarea>
+                        <span asp-validation-for="AssetMovement.Comments" class="form-error"></span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label asp-for="AssetMovement.DispatchDate" class="form-label-modern">Expected Transfer Date <span style="color:#EF4444;">*</span></label>
+                            <input asp-for="AssetMovement.DispatchDate" class="form-input-modern" type="date" />
+                            <span asp-validation-for="AssetMovement.DispatchDate" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="AssetMovement.ExpectedReturnDate" class="form-label-modern">
+                                @Html.DisplayNameFor(m => m.AssetMovement!.ExpectedReturnDate)
+                                <span style="font-size:12px; color:#9CA3AF; font-weight:400;">(for temp. loans)</span>
+                            </label>
+                            <input asp-for="AssetMovement.ExpectedReturnDate" class="form-input-modern" type="date" />
+                            <span asp-validation-for="AssetMovement.ExpectedReturnDate" class="form-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- Approval — Transfer -->
+                    <div class="approval-box">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13.5px; font-weight:600; color:#374151;">Approval Status</div>
+                                <div style="font-size:12px; color:#9CA3AF; margin-top:2px;">Requires manager sign-off before transfer is processed</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <label class="toggle-wrap">
+                                    <input asp-for="ApprovalRequired" type="checkbox" id="approvalToggle" name="ApprovalRequired" />
+                                    <div class="toggle-track"></div>
+                                    <div class="toggle-thumb"></div>
+                                </label>
+                                <span style="font-size:13px; font-weight:500; color:#374151;">Approval Required</span>
+                            </div>
+                        </div>
+                        @* <div id="approverSection" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid #E9ECEF;">
+                            <label class="form-label-modern">Approval Manager <span style="color:#EF4444;">*</span></label>
+                            <select asp-for="AssetMovement.Authorizer" class="form-select-modern">
+                                <option value="">Select approver...</option>
+                                <option value="Heng Vuthy — IT Manager">Heng Vuthy — IT Manager</option>
+                                <option value="Chan Bopha — Finance Manager">Chan Bopha — Finance Manager</option>
+                                <option value="Department Head">Department Head</option>
+                            </select>
+                        </div> *@
+                    </div>
+
+                </div>
+
+                <!-- ═══════════ REPAIR ═══════════ -->
+                <div id="repairSection" style="display:none;">
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label asp-for="RepairRecord.ServiceProvider" class="form-label-modern"></label>
+                            <select asp-for="RepairRecord.ServiceProvider" class="form-select-modern">
+                                <option value="">Select vendor...</option>
+                                <option value="TechMart Service Center">TechMart Service Center</option>
+                                <option value="Dell Authorized Service">Dell Authorized Service</option>
+                                <option value="HP Support Cambodia">HP Support Cambodia</option>
+                                <option value="Local IT Workshop">Local IT Workshop</option>
+                                <option value="Internal IT Team">Internal IT Team</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="RepairRecord.ServiceProvider" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label class="form-label-modern">Priority</label>
+                            <input type="hidden" name="RepairPriority" id="repairPriorityInput" value="Medium" />
+                            <div style="display:flex; gap:6px;">
+                                <button type="button" class="priority-pill" data-pval="Low"      onclick="setPriority(this)">Low</button>
+                                <button type="button" class="priority-pill active-medium" data-pval="Medium"   onclick="setPriority(this)">Medium</button>
+                                <button type="button" class="priority-pill" data-pval="High"     onclick="setPriority(this)">High</button>
+                                <button type="button" class="priority-pill" data-pval="Critical" onclick="setPriority(this)">Critical</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label asp-for="RepairRecord.IssueDescription" class="form-label-modern"></label>
+                        <textarea asp-for="RepairRecord.IssueDescription" class="form-textarea-modern" rows="3"
+                                  placeholder="Describe the problem — symptoms, when it started, any error messages or codes..."></textarea>
+                        <span asp-validation-for="RepairRecord.IssueDescription" class="form-error"></span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label class="form-label-modern">Estimated Repair Cost</label>
+                            <div style="display:flex; gap:8px;">
+                                <select name="RepairCurrency" class="form-select-modern" style="width:80px; flex-shrink:0;">
+                                    <option value="USD">USD</option>
+                                    <option value="KHR">KHR</option>
+                                </select>
+                                <input asp-for="RepairRecord.RepairCost" class="form-input-modern" type="number" step="0.01" placeholder="0.00" style="flex:1;" />
+                            </div>
+                            <span asp-validation-for="RepairRecord.RepairCost" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="RepairRecord.CompletionDate" class="form-label-modern">Expected Completion Date</label>
+                            <input asp-for="RepairRecord.CompletionDate" class="form-input-modern" type="date" />
+                            <span asp-validation-for="RepairRecord.CompletionDate" class="form-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- Warranty Claim toggle -->
+                    <div style="padding:14px 16px; background:#F9FAFB; border-radius:10px; border:1.5px solid #E5E7EB; margin-bottom:16px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13.5px; font-weight:600; color:#374151;">Warranty Claim</div>
+                                <div style="font-size:12px; color:#9CA3AF; margin-top:2px;">Asset may be under warranty — repair could be covered at no cost</div>
+                            </div>
+                            <label class="toggle-wrap">
+                                <input type="checkbox" id="warrantyToggle" name="WarrantyClaim" onchange="toggleWarranty(this)" />
+                                <div class="toggle-track"></div>
+                                <div class="toggle-thumb"></div>
+                            </label>
+                        </div>
+                        <div id="warrantyRefSection" style="display:none; margin-top:13px; padding-top:13px; border-top:1px solid #E9ECEF;">
+                            <label class="form-label-modern">Warranty / Claim Reference Number</label>
+                            <input type="text" name="WarrantyRef" class="form-input-modern" placeholder="e.g. WRN-2024-00445" />
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label asp-for="RepairRecord.Notes" class="form-label-modern">Additional Notes</label>
+                        <textarea asp-for="RepairRecord.Notes" class="form-textarea-modern" rows="2"
+                                  placeholder="Extra instructions for the service team..."></textarea>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label-modern">Supporting Documents
+                            <span style="font-size:12px; color:#9CA3AF; font-weight:400;">(photos, diagnostics)</span>
+                        </label>
+                        <div class="upload-zone">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin:0 auto 7px;display:block;">
+                                <path d="M10 13V7M7.5 9.5L10 7L12.5 9.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3.5 14V15.5A2 2 0 0 0 5.5 17.5H14.5A2 2 0 0 0 16.5 15.5V14" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <div style="font-size:13px; color:#9CA3AF;">Drop files or <span style="color:#6D28D9; font-weight:500;">browse</span></div>
+                            <div style="font-size:11.5px; color:#D1D5DB; margin-top:2px;">PDF, JPG, PNG up to 10MB</div>
+                        </div>
+                    </div>
+
+                    <!-- Approval — Repair -->
+                    <div class="approval-box">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13.5px; font-weight:600; color:#374151;">Approval Status</div>
+                                <div style="font-size:12px; color:#9CA3AF; margin-top:2px;">Requires manager approval before sending asset to vendor</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <label class="toggle-wrap">
+                                    <input type="checkbox" id="repairApprovalToggle" onchange="syncApproval(this)" />
+                                    <div class="toggle-track"></div>
+                                    <div class="toggle-thumb"></div>
+                                </label>
+                                <span style="font-size:13px; font-weight:500; color:#374151;">Approval Required</span>
+                            </div>
+                        </div>
+                        <div id="repairApproverSection" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid #E9ECEF;">
+                            <label class="form-label-modern">Approval Manager <span style="color:#EF4444;">*</span></label>
+                            <select class="form-select-modern" onchange="$('#AssetMovement_Authorizer').val(this.value)">
+                                <option value="">Select approver...</option>
+                                <option value="Heng Vuthy — IT Manager">Heng Vuthy — IT Manager</option>
+                                <option value="Chan Bopha — Finance Manager">Chan Bopha — Finance Manager</option>
+                                <option value="Department Head">Department Head</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ═══════════ DISPOSAL ═══════════ -->
+                <div id="disposalSection" style="display:none;">
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label asp-for="DisposalRecord.DisposalMethod" class="form-label-modern"></label>
+                            <select asp-for="DisposalRecord.DisposalMethod" class="form-select-modern">
+                                <option value="">Select method...</option>
+                                <option value="Scrap">Scrap</option>
+                                <option value="Sell">Sell</option>
+                                <option value="Donate">Donate</option>
+                                <option value="Write-off">Write-off</option>
+                                <option value="Trade-in">Trade-in</option>
+                            </select>
+                            <span asp-validation-for="DisposalRecord.DisposalMethod" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="DisposalRecord.DisposalDate" class="form-label-modern"></label>
+                            <input asp-for="DisposalRecord.DisposalDate" class="form-input-modern" type="date" />
+                            <span asp-validation-for="DisposalRecord.DisposalDate" class="form-error"></span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+                        <div>
+                            <label class="form-label-modern">Disposal / Sale Value</label>
+                            <div style="display:flex; gap:8px;">
+                                <select name="DisposalCurrency" class="form-select-modern" style="width:80px; flex-shrink:0;">
+                                    <option value="USD">USD</option>
+                                    <option value="KHR">KHR</option>
+                                </select>
+                                <input asp-for="DisposalRecord.DisposalValue" class="form-input-modern" type="number" step="0.01" placeholder="0.00" style="flex:1;" />
+                            </div>
+                            <span asp-validation-for="DisposalRecord.DisposalValue" class="form-error"></span>
+                        </div>
+                        <div>
+                            <label class="form-label-modern">
+                                Current Book Value
+                                <span style="font-size:10.5px; background:#FEF3C7; color:#92400E; padding:2px 7px; border-radius:4px; font-weight:500; margin-left:4px;">System</span>
+                            </label>
+                            <div style="display:flex; align-items:center; justify-content:space-between; border:1.5px solid #FDBA74; border-radius:8px; padding:10px 14px; background:#FFF7ED;">
+                                <span style="font-size:14px; font-weight:700; color:#9A3412;">
+                                    USD @(Model.DisposalRecord?.BookValue?.ToString("N2") ?? "0.00")
+                                </span>
+                            </div>
+                            <div style="font-size:11px; color:#9CA3AF; margin-top:4px;">From depreciation schedule — contact Finance to correct</div>
+                        </div>
+                    </div>
+
+                    <!-- Book value warning -->
+                    <div style="display:flex; gap:10px; padding:11px 14px; background:#FEF3C7; border:1.5px solid #FCD34D; border-radius:9px; margin-bottom:16px;">
+                        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" style="flex-shrink:0;margin-top:1px;">
+                            <path d="M8.5 2L1.5 14.5h14L8.5 2Z" stroke="#D97706" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                            <path d="M8.5 7V10.5M8.5 12.5h.01" stroke="#D97706" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <div style="font-size:12.5px; color:#92400E; line-height:1.6;">
+                            Disposal may trigger an accounting write-off. Finance Manager approval is <strong>mandatory</strong> and cannot be waived by any user.
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label asp-for="DisposalRecord.ReasonForDisposal" class="form-label-modern"></label>
+                        <textarea asp-for="DisposalRecord.ReasonForDisposal" class="form-textarea-modern" rows="3"
+                                  placeholder="Describe why this asset is being disposed — end of life, irreparable damage, replaced by new model..."></textarea>
+                        <span asp-validation-for="DisposalRecord.ReasonForDisposal" class="form-error"></span>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label-modern">Supporting Documents
+                            <span style="font-size:12px; color:#9CA3AF; font-weight:400;">(authorisation, valuation cert.)</span>
+                        </label>
+                        <div class="upload-zone">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin:0 auto 7px;display:block;">
+                                <path d="M10 13V7M7.5 9.5L10 7L12.5 9.5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3.5 14V15.5A2 2 0 0 0 5.5 17.5H14.5A2 2 0 0 0 16.5 15.5V14" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <div style="font-size:13px; color:#9CA3AF;">Drop files or <span style="color:#6D28D9; font-weight:500;">browse</span></div>
+                            <div style="font-size:11.5px; color:#D1D5DB; margin-top:2px;">PDF, JPG, PNG up to 10MB</div>
+                        </div>
+                    </div>
+
+                    <!-- Approval locked — system-enforced for disposal -->
+                    <div style="padding:16px; background:#FEF2F2; border:1.5px solid #FECACA; border-radius:10px;">
+                        <div style="display:flex; gap:11px; margin-bottom:13px;">
+                            <div style="width:34px; height:34px; background:#EF4444; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+                                    <rect x="3" y="7" width="10" height="7.5" rx="2" stroke="white" stroke-width="1.5" fill="none"/>
+                                    <circle cx="8" cy="10.5" r="1" fill="white"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size:13.5px; font-weight:700; color:#991B1B;">Approval Mandatory — System Enforced</div>
+                                <div style="font-size:12.5px; color:#EF4444; margin-top:3px; line-height:1.55;">
+                                    Disposal requires Finance Manager approval. This is a system control and cannot be overridden by any user.
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; padding:10px 13px; background:rgba(255,255,255,0.55); border-radius:8px; margin-bottom:13px; cursor:not-allowed;">
+                            <div style="position:relative; width:44px; height:24px; border-radius:12px; background:#6D28D9; flex-shrink:0; opacity:0.7;">
+                                <div style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,.15);"></div>
+                            </div>
+                            <span style="font-size:13px; font-weight:500; color:#991B1B;">Approval Required</span>
+                            <span style="margin-left:auto; display:inline-flex; align-items:center; gap:4px; font-size:11px; background:#FECACA; color:#991B1B; padding:3px 10px; border-radius:20px; font-weight:600;">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                                    <rect x="1.5" y="4.5" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                                </svg>
+                                System-locked
+                            </span>
+                        </div>
+                        <div>
+                            <label class="form-label-modern" style="color:#991B1B; font-weight:600;">Disposal Approver <span style="color:#EF4444;">*</span></label>
+                            <select asp-for="DisposalRecord.ApprovedBy" class="form-select-modern" style="border-color:#FECACA;">
+                                <option value="">Select approver (mandatory)...</option>
+                                <option value="Chan Bopha — Finance Manager">Chan Bopha — Finance Manager</option>
+                                <option value="Senior Management">Senior Management</option>
+                                <option value="CFO">CFO (for high-value assets)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a asp-page="/Assets/Details" asp-route-slug="@Model.Asset?.Slug" class="btn-modern btn-secondary-modern">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Cancel
+            </a>
+            <div style="display:flex; gap:8px; align-items:center;">
+                @if (Model.AssetMovement != null && Model.AssetMovement.Id > 0) {
+                    <a asp-page="/AssetMovements/Details" asp-route-id="@Model.AssetMovement.Id" class="btn-modern btn-secondary-modern">
+                        Current Movement Details
+                    </a>
+                }
+                <button id="btnCreate"
+                        type="submit"
+                        name="AssetMovement.Id"
+                        value="@Model.AssetMovement?.Id"
+                        class="btn-modern btn-primary-modern"
+                        @(Model.IsDeposed ? "disabled" : "")>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    @(Model.IsPendingApproval ? "Save Change" : Model.IsMovementPending ? "Save Change" : "Create")
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- ── Right: Asset Info + Tips ── -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="form-card-stripe violet"></div>
+                <h4 class="form-card-title">Asset Information</h4>
+            </div>
+            <div class="form-card-body" style="padding:0;">
+                @{
+                    var assetStatusCls = Model.Asset?.Status?.ToLower() switch {
+                        "disposed"    => "disposed",
+                        "in transit"  => "in-transit",
+                        "in use"      => "in-use",
+                        "available"   => "available",
+                        "maintenance" => "maintenance",
+                        _             => "inactive"
+                    };
+                }
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">Asset Name</td>
+                        <td class="info-value">@Model.Asset?.AssetName</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Asset Tag</td>
+                        <td class="info-value" style="font-family:'DM Mono',monospace; font-size:12px;">@Model.Asset?.AssetNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Department</td>
+                        <td class="info-value">@Model.Asset?.Department</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Status</td>
+                        <td class="info-value">
+                            <span class="status-badge @assetStatusCls">
+                                <span class="dot"></span>@Model.Asset?.Status
+                            </span>
+                        </td>
+                    </tr>
+                    @if (Model.Asset?.PurchaseCost > 0) {
+                        <tr>
+                            <td class="info-label">Purchase Cost</td>
+                            <td class="info-value" style="font-weight:700; color:#92400E;">
+                                @Model.Asset?.Currency @Model.Asset?.PurchaseCost.ToString("N2")
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+
+        <!-- Tips card — contextual -->
+        <div class="form-card" id="tipsCard">
+            <div class="form-card-header">
+                <div class="form-card-stripe" style="background:#C4B5FD;"></div>
+                <h4 class="form-card-title" id="tipTitle">Transfer Tips</h4>
+            </div>
+            <div class="form-card-body" id="tipsList"></div>
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+    $(function () {
+        var currentMovementType = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AssetMovement?.MovementType));
+        var isDeposed           = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.IsDeposed));
+        var isPendingApproval   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.IsPendingApproval));
+        var initialApproval     = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ApprovalRequired));
+
+        var tips = {
+            Transfer: {
+                title: 'Transfer Tips',
+                items: [
+                    'Source and destination link to your org chart — select carefully for accurate location tracking.',
+                    'New custodian must confirm receipt before the asset status moves to Active.',
+                    'Set a return date for temporary loans to trigger automatic follow-up reminders.'
+                ]
+            },
+            Repair: {
+                title: 'Repair Tips',
+                items: [
+                    'Enable warranty claim if the asset is still within the warranty period — may result in zero-cost repair.',
+                    'Attach diagnostic photos or error logs to help the vendor resolve the issue faster.',
+                    'Critical priority repairs surface at the top of the IT dashboard queue immediately.'
+                ]
+            },
+            Disposal: {
+                title: 'Disposal Tips',
+                items: [
+                    'Book value comes from the depreciation schedule — contact Finance if it needs to be corrected.',
+                    'Attach a valuation certificate or disposal authorisation for audit compliance.',
+                    'Finance Manager approval is always mandatory when book value is above $0.'
+                ]
+            }
+        };
+
+        function renderTips(type) {
+            var t = tips[type] || tips['Transfer'];
+            $('#tipTitle').text(t.title);
+            var html = '';
+            t.items.forEach(function(item) {
+                html += '<div style="display:flex;gap:7px;margin-bottom:8px;">'
+                      + '<div style="width:5px;height:5px;background:#C4B5FD;border-radius:50%;margin-top:7px;flex-shrink:0;"></div>'
+                      + '<span style="font-size:12.5px;color:#6B7280;line-height:1.6;">' + item + '</span>'
+                      + '</div>';
+            });
+            $('#tipsList').html(html);
+        }
+
+        function applyVisibility(type) {
+            $('#transferSection, #repairSection, #disposalSection').hide();
+            if (type === 'Repair')        { $('#repairSection').show(); }
+            else if (type === 'Disposal') { $('#disposalSection').show(); }
+            else                          { $('#transferSection').show(); }
+            renderTips(type || 'Transfer');
+        }
+
+        function updateApproverVisibility() {
+            var checked = $('#approvalToggle').is(':checked');
+            $('#approverSection').toggle(checked);
+        }
+
+        function updateSubmitState() {
+            var selectedType  = $('input[name="MovementType"]:checked').val() || '';
+            var sameAsCurrent = currentMovementType
+                ? selectedType.trim().toLowerCase() === currentMovementType.trim().toLowerCase()
+                : false;
+            var isOtherPendingApproval = !sameAsCurrent && isPendingApproval;
+            var canSubmit = !isOtherPendingApproval && !isDeposed;
+            $('#btnCreate').prop('disabled', !canSubmit);
+        }
+
+        // Priority pills
+        window.setPriority = function(btn) {
+            var val = $(btn).data('pval');
+            $('.priority-pill').removeClass('active-low active-medium active-high active-critical');
+            $(btn).addClass('active-' + val.toLowerCase());
+            $('#repairPriorityInput').val(val);
+        };
+
+        // Warranty toggle
+        window.toggleWarranty = function(cb) {
+            $('#warrantyRefSection').toggle($(cb).is(':checked'));
+        };
+
+        // Sync repair approval toggle → hidden ApprovalRequired + show/hide approver
+        window.syncApproval = function(cb) {
+            $('#approvalToggle').prop('checked', $(cb).is(':checked'));
+            $('#repairApprovalToggle').prop('checked', $(cb).is(':checked'));
+            $('#repairApproverSection').toggle($(cb).is(':checked'));
+        };
+
+        // Transfer approval toggle → show/hide approver
+        $('#approvalToggle').on('change', function() {
+            updateApproverVisibility();
+        });
+
+        // Movement type change
+        $('input[name="MovementType"]').on('change', function () {
+            var type = $(this).val();
+            applyVisibility(type);
+            updateSubmitState();
+            // For disposal, force approval required
+            if (type === 'Disposal') {
+                $('#approvalToggle').prop('checked', true);
+            }
+        });
+
+        // Init
+        var initType = currentMovementType || ($('input[name="MovementType"]:not(:disabled)').first().val());
+        if (currentMovementType) {
+            $('input[name="MovementType"][value="' + currentMovementType + '"]').prop('checked', true);
+        }
+        applyVisibility(initType || 'Transfer');
+        if (initialApproval) {
+            $('#approvalToggle').prop('checked', true);
+            updateApproverVisibility();
+        }
+        updateSubmitState();
+
+        // ─── New Custodian — staff ID lookup (debounced) ───
+        var staffLookupTimer = null;
+
+        function setNewCustodianLookupText(text, color) {
+            $('#newCustodianLookupText').text(text).css('color', color);
+        }
+
+        $('#newCustodianStaffId').on('input', function () {
+            var staffId = $(this).val().trim();
+
+            clearTimeout(staffLookupTimer);
+            $('#newCustodianFullName').val('');
+            $('#newCustodianEmail').val('');
+
+            if (!staffId) {
+                setNewCustodianLookupText('— User Lookup', '#9CA3AF');
+                return;
+            }
+
+            setNewCustodianLookupText('Looking up...', '#9CA3AF');
+
+            staffLookupTimer = setTimeout(function () {
+                $.get('@Url.Page("Create", "LookupStaff")', { staffId: staffId })
+                    .done(function (result) {
+                        if (result && result.found) {
+                            setNewCustodianLookupText(result.text, '#16A34A');
+                            $('#newCustodianFullName').val(result.fullName);
+                            $('#newCustodianEmail').val(result.email || '');
+                        } else {
+                            setNewCustodianLookupText((result && result.message) || 'staff Not found', '#EF4444');
+                        }
+                    })
+                    .fail(function () {
+                        setNewCustodianLookupText('Lookup failed. Try again.', '#EF4444');
+                    });
+            }, 2000);
+        });
+    });
+    </script>
+}

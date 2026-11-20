@@ -1,0 +1,88 @@
+@page
+@model AssetManagement.Web.Pages.Maintenance.Records.IndexModel
+@using AssetManagement.Domain.Constants
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    ViewData["Title"] = "Maintenance Work Orders";
+    ViewData["Tab"] = "records";
+    var heading = new HeadingModel { Crumb = "Asset Operations", Title = "Maintenance Work Orders", Subtitle = "Planned, in-progress and finished maintenance, including completed repairs." };
+    if (Model.CanComplete) heading.Actions.Add(new HeadingAction("Record Work", "/Maintenance/Records/Record"));
+    if (Model.CanManage) heading.Actions.Add(new HeadingAction("Plan Work Order", "/Maintenance/Records/Create", null, true));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Tabs" />
+<partial name="_Messages" />
+
+<div class="table-card">
+    <div class="table-toolbar">
+        <div>
+            <p class="table-toolbar-title">Work orders</p>
+            <p class="table-toolbar-sub">@Model.TotalItems found</p>
+        </div>
+        <form method="get" class="table-toolbar-controls" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+            <select name="Status" class="toolbar-select" style="width:auto;">
+                <option value="">All statuses</option>
+                @foreach (var s in MaintenanceStatus.All)
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@MaintenanceUi.StatusText(s)</option>
+                }
+            </select>
+            <select name="Type" class="toolbar-select" style="width:auto;">
+                <option value="">All types</option>
+                @foreach (var t in MaintenanceType.All)
+                {
+                    <option value="@t" selected="@(Model.Type == t)">@t</option>
+                }
+            </select>
+            <input type="date" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" class="toolbar-select" style="width:auto;" title="From" />
+            <input type="date" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" class="toolbar-select" style="width:auto;" title="To" />
+            <input type="text" name="SearchTerm" value="@Model.SearchTerm" placeholder="Asset, work or vendor…" class="toolbar-select" style="width:180px;" />
+            <button type="submit" class="toolbar-btn">Filter</button>
+            @if (Model.HasFilter)
+            {
+                <a asp-page="Index" class="toolbar-btn" style="color:#DC2626; border-color:#FCA5A5;">Clear</a>
+            }
+        </form>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Asset</th>
+                    <th>Work</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Vendor</th>
+                    <th class="text-right">Cost</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Records.Count == 0)
+                {
+                    <tr><td colspan="8"><div class="empty-state"><p>No work orders found.</p></div></td></tr>
+                }
+                @foreach (var r in Model.Records)
+                {
+                    <tr>
+                        <td><span class="cell-text">@((r.PerformedDate ?? r.PlannedDate).ToString("dd MMM yyyy"))</span></td>
+                        <td><div class="cell-name">@r.AssetName</div><span class="cell-mono">@r.AssetNumber</span></td>
+                        <td><span class="cell-text">@r.Title</span></td>
+                        <td><span class="cell-text">@r.Type</span></td>
+                        <td><span class="status-badge @MaintenanceUi.StatusClass(r.Status)"><span class="dot"></span>@MaintenanceUi.StatusText(r.Status)</span></td>
+                        <td><span class="cell-text">@r.VendorName</span></td>
+                        <td class="text-right"><span class="cell-text">@(r.Cost is { } c ? $"{r.Currency} {c:N2}" : "")</span></td>
+                        <td class="text-right"><a asp-page="Details" asp-route-id="@r.Id" class="toolbar-btn">Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager" model="@((Model.PageNumber, Model.TotalPages, Model.TotalItems, "work orders",
+        (Func<int, string>)(p => Url.Page("Index", new { pageNumber = p, pageSize = Model.PageSize, status = Model.Status, type = Model.Type, from = Model.From?.ToString("yyyy-MM-dd"), to = Model.To?.ToString("yyyy-MM-dd"), searchTerm = Model.SearchTerm })!)))" />
+</div>

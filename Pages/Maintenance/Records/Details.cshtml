@@ -1,0 +1,78 @@
+@page "{id:int}"
+@model AssetManagement.Web.Pages.Maintenance.Records.DetailsModel
+@using AssetManagement.Domain.Constants
+@using AssetManagement.Web.Models
+@{
+    Layout = "Shared/_Layout";
+    var r = Model.Record;
+    ViewData["Title"] = "Work Order";
+    ViewData["Tab"] = "records";
+    ViewData["Prefix"] = "Complete";
+    ViewData["Suppliers"] = Model.Suppliers;
+    var heading = new HeadingModel { Crumb = "Maintenance", Title = r.Title, Subtitle = $"{r.AssetNumber} · {r.AssetName}" };
+    heading.Actions.Add(new HeadingAction("Back to List", "/Maintenance/Records/Index"));
+}
+
+<partial name="_Heading" model="heading" />
+<partial name="_Messages" />
+
+<div class="form-card">
+    <div class="form-card-header">
+        <div class="form-card-stripe blue"></div>
+        <h4 class="form-card-title">Details</h4>
+    </div>
+    <div class="form-card-body">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+            <div><div class="info-label">Status</div><div class="info-value"><span class="status-badge @MaintenanceUi.StatusClass(r.Status)"><span class="dot"></span>@MaintenanceUi.StatusText(r.Status)</span></div></div>
+            <div><div class="info-label">Type</div><div class="info-value">@r.Type</div></div>
+            <div><div class="info-label">Planned</div><div class="info-value">@r.PlannedDate.ToString("dd MMM yyyy")</div></div>
+            <div><div class="info-label">Started</div><div class="info-value">@(r.StartedAt?.ToString("dd MMM yyyy HH:mm") ?? "-")</div></div>
+            <div><div class="info-label">Work date</div><div class="info-value">@(r.PerformedDate?.ToString("dd MMM yyyy") ?? "-")</div></div>
+            <div><div class="info-label">Done by</div><div class="info-value">@(r.PerformedBy ?? "-")</div></div>
+            <div><div class="info-label">Vendor</div><div class="info-value">@(r.VendorName ?? "-")</div></div>
+            <div><div class="info-label">Cost</div><div class="info-value">@(r.Cost is { } c ? $"{r.Currency} {c:N2}" : "-")</div></div>
+            <div><div class="info-label">Asset out of service</div><div class="info-value">@(r.TakesAssetOutOfService ? "Yes, while in progress" : "No")</div></div>
+            <div><div class="info-label">Created by</div><div class="info-value">@(r.CreatedBy ?? "-")</div></div>
+        </div>
+        @if (!string.IsNullOrEmpty(r.Notes))
+        {
+            <div style="margin-top:16px;"><div class="info-label">Notes</div><div class="info-value" style="white-space:pre-wrap;">@r.Notes</div></div>
+        }
+    </div>
+</div>
+
+@if (Model.IsOpen)
+{
+    @if (r.Status == MaintenanceStatus.Planned && Model.CanComplete)
+    {
+        <form method="post" asp-page-handler="Start" asp-route-id="@r.Id" style="margin-bottom:16px;">
+            <button type="submit" class="btn-modern btn-secondary-modern">Start work@(r.TakesAssetOutOfService ? " (takes the asset out of service)" : "")</button>
+        </form>
+    }
+
+    @if (Model.CanComplete)
+    {
+        <form method="post" asp-page-handler="Complete" asp-route-id="@r.Id" novalidate>
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-stripe green"></div>
+                    <h4 class="form-card-title">Complete work</h4>
+                </div>
+                <div class="form-card-body">
+                    <partial name="_WorkFields" model="Model.Complete" view-data="ViewData" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-modern btn-primary-modern">Mark as done</button>
+            </div>
+        </form>
+    }
+
+    @if (Model.CanManage)
+    {
+        <form method="post" asp-page-handler="Cancel" asp-route-id="@r.Id" style="margin-top:16px; display:flex; gap:8px; align-items:center;">
+            <input name="CancelReason" class="form-input-modern" style="max-width:360px;" maxlength="500" placeholder="Reason (optional)" />
+            <button type="submit" class="toolbar-btn" style="color:#DC2626; border-color:#FCA5A5;">Cancel work order</button>
+        </form>
+    }
+}

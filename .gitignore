@@ -1,0 +1,83 @@
+
+# ==========================================
+# ASP.NET Core / .NET 8 / Visual Studio
+# Asset Management System
+# ==========================================
+
+# Build output
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+artifacts/
+publish/
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Development secrets and local settings
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/secrets.json
+.env
+.env.*
+!.env.example
+
+# Certificates and private keys
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Logs
+**/logs/
+**/Logs/
+*.log
+
+# Test results
+**/TestResults/
+*.trx
+coverage/
+coverage.cobertura.xml
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+*~
+Thumbs.db
+.DS_Store
+
+# Node.js (if used)
+node_modules/
+dist/
+
+# Publish profiles
+*.pubxml.user
+
+# Keep source files
+!**/wwwroot/**

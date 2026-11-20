@@ -1,0 +1,9 @@
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert-success-modern">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert-danger-modern">@err</div>
+}
+<div asp-validation-summary="All" class="alert-danger-modern"></div>
