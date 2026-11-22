@@ -1,7 +1,0 @@
-#sidebar-menu .assets-dropdown-menu .assets-dropdown-item:hover,
-#sidebar-menu .assets-dropdown-menu .assets-dropdown-item.active,
-#sidebar-menu .assets-dropdown-menu .assets-dropdown-item.selected {
-    background-color: rgba(250, 128, 114, 0.16) !important;
-    color: whitesmoke !important;
-    font-weight: 700;
-}
