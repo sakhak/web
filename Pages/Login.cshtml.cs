@@ -99,7 +99,7 @@ namespace AssetManagement.Web.Pages
         private string GetSafeReturnUrl(string? returnUrl) =>
             !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
                 ? returnUrl
-                : "/Dashboard/Index";
+                : Url.Page("/Index") ?? "/";
 
         public sealed class LocalLoginInput
         {

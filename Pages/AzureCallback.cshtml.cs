@@ -32,7 +32,7 @@ namespace AssetManagement.Web.Pages
                     Log.Information($"User signed in: {email}");
                 }
 
-                return Redirect("/AssetCategories");
+                return RedirectToPage("/Index");
             }
             catch (Exception ex)
             {
